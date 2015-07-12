@@ -1,6 +1,7 @@
 #include <crypto.h>
 #include <string.h>
 #include "time.h"
+#include <stdio.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <setjmp.h>
@@ -28,12 +29,27 @@ static void simple_test_success(void **state) {
 
 	crypto_data cipheredPair = crypto_encrypt(plain, strlen((char*) plain), key, iv);
 	crypto_data decipheredPair = crypto_decrypt(cipheredPair.data, cipheredPair.length, key, iv);
+
+	assert_int_equal(strlen((char*) plain), decipheredPair.length);
+	assert_string_equal(plain, decipheredPair.data);
 }
 
 int main(void) {
+
+	long current_time; // real call is required here
+	time(&current_time);
+
+	printf("Test initialization... %ld", current_time);
+
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(null_test_success),
         cmocka_unit_test(simple_test_success),
     };
-    return cmocka_run_group_tests(tests, NULL, NULL);
+
+    int results = cmocka_run_group_tests(tests, NULL, NULL);
+
+	time(&current_time);
+    printf("Test teardown %ld", current_time);
+
+    return results;
 }
