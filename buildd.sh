@@ -26,3 +26,4 @@ mv .project ..
 mv .cproject ..
 make -j 4 
 ctest --output-on-failure .
+sudo make install
