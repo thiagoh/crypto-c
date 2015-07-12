@@ -15,7 +15,7 @@ script:
     - rm -rf cmocka-build || true
     - mkdir cmocka-build
     - cd cmocka-build
-    - cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTING=ON ../cmocka-1.0.1
+    - cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ../cmocka-1.0.1
     - make
     - sudo make install
     - cd ..
