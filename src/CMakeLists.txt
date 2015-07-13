@@ -23,9 +23,6 @@ install (DIRECTORY "${PROJECT_SOURCE_DIR}/src/" DESTINATION include COMPONENT De
 find_package(OpenSSL)
 include_directories(${OpenSSL_INCLUDE_DIRS})
 
-target_include_directories(cryptoc
-    PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR};${Boost_INCLUDE_DIRS}>"
-    PUBLIC "$<INSTALL_INTERFACE:include;${Boost_INCLUDE_DIRS}>")
 
 
 
