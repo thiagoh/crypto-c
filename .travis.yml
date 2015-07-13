@@ -18,6 +18,7 @@ script:
     - cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ../cmocka-1.0.1
     - make
     - sudo make install
+    - sudo setup-travis.sh
     - cd ..
     - rm -rf _build || true
     - mkdir _build
