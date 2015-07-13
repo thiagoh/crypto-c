@@ -70,12 +70,10 @@ Vagrant.configure(2) do |config|
 	sudo apt-get update -qq
 	sudo apt-get -y install build-essential
 	sudo apt-get -y install g++
-	sudo apt-get install -y libboost-system-dev
-	sudo apt-get install -y libboost-regex-dev
-	sudo apt-get install -y libboost-filesystem-dev
-	sudo apt-get install -y libboost-thread-dev
-	sudo apt-get install -y libboost-test-dev
-	sudo apt-get install -y openssl libssl-dev
+	sudo apt-get install -y software-properties-common 
+	sudo apt-get install -y python-software-properties
+	sudo apt-get install -y openssl
 	sudo apt-get install -y libssl-dev
   SHELL
+  config.vm.provision "shell", path: "setup-travis.sh"
 end
