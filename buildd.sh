@@ -19,7 +19,7 @@ rm -rf build || true
 mkdir build
 cd build
 
-cmake -G"Eclipse CDT4 - Unix Makefiles" -D_ECLIPSE_VERSION=4.5 -D CMAKE_BUILD_TYPE=Debug ..
+cmake -G"Eclipse CDT4 - Unix Makefiles" -D_ECLIPSE_VERSION=4.5 -DCMAKE_BUILD_TYPE=Debug --debug-output ..
 #cmake --debug-output .. 
 
 mv .project ..
