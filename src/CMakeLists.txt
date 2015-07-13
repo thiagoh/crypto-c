@@ -23,13 +23,7 @@ install (DIRECTORY "${PROJECT_SOURCE_DIR}/src/" DESTINATION include COMPONENT De
 find_package(OpenSSL)
 include_directories(${OpenSSL_INCLUDE_DIRS})
 
-
-
-
-
-
 include(CMakePackageConfigHelpers)
-
 
 # ... for the build tree
 set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")

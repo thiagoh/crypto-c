@@ -25,6 +25,7 @@ script:
     - cmake -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ..
     - make 
     - ctest --output-on-failure .
+    - sudo make install
 
 notifications:
   email:
