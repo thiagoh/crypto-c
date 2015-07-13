@@ -9,7 +9,7 @@ if ( test "`uname -s`" = "Darwin" ); then
   echo
 else
   #install a newer cmake since at this time Travis only has version 2.8.7
-  sudo add-apt-repository ppa:kalakris/cmake
+  sudo add-apt-repository -y ppa:kalakris/cmake
   sudo apt-get update -qq
   sudo apt-get install -y cmake
 fi
