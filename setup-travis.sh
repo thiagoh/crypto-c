@@ -1,4 +1,4 @@
-#/bin/bash
+#/bin/sh -f
 
 # things to do for travis-ci in the before_install section
 
