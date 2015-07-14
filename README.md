@@ -14,9 +14,8 @@ const char* plaintext = "the fox jumped over the lazy dog";
 
 The default cipher mode is CBC and algorithm is 3DES_EDE 
 
-std::pair<unsigned char*, int> ciphertext = Crypto::encrypt(plaintext, strlen(plaintext), key, iv, &len);
-
-std::pair<unsigned char*, int> newplaintext = Crypto::decrypt(ciphertext, strlen(ciphertext), key, iv, &newlen);
+cryptoc_data ciphertext = cryptoc_encrypt(plaintext, strlen(plaintext), key, iv, &len);
+cryptoc_data newplaintext = cryptoc_decrypt(ciphertext, strlen(ciphertext), key, iv, &newlen);
 
 ciphertext.first; // data encrypted
 ciphertext.second; // length
