@@ -2,16 +2,18 @@
 # It defines the following variables
 #  CRYTPOC_INCLUDE_DIRS - include directories for CryptoC
 #  CRYTPOC_LIBRARIES    - libraries to link against
- 
+
 # Compute paths
+
+#message( "CMAKE_CURRENT_LIST_FILE 1: ${CMAKE_CURRENT_LIST_FILE}" )
+#get_filename_component(xx "${CMAKE_CURRENT_LIST_FILE}" PATH)
 get_filename_component(CRYTPOC_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
-set(CRYTPOC_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
- 
+set(CRYTPOC_INCLUDE_DIRS "${CRYPTOC_CMAKE_DIR}/")
+#message( "CRYPTOC_CMAKE_DIR 2: ${CRYTPOC_CMAKE_DIR}" )
+
 # Our library dependencies (contains definitions for IMPORTED targets)
 if(NOT TARGET cryptoc AND NOT CryptoC_BINARY_DIR)
-
   include("${CRYTPOC_CMAKE_DIR}/CryptoCTargets.cmake")
-  
 endif()
  
 # These are IMPORTED targets created by CryptoCTargets.cmake
