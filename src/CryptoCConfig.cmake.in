@@ -15,6 +15,8 @@ set(CRYTPOC_INCLUDE_DIRS "${CRYPTOC_CMAKE_DIR}/")
 if(NOT TARGET cryptoc AND NOT CryptoC_BINARY_DIR)
   include("${CRYTPOC_CMAKE_DIR}/CryptoCTargets.cmake")
 endif()
- 
+
 # These are IMPORTED targets created by CryptoCTargets.cmake
-set(CRYTPOC_LIBRARIES cryptoc)
+#set(CRYTPOC_LIBRARIES cryptoc)
+set(CRYTPOC_LIBRARY @LIB_INSTALL_DIR@/@CRYTPOC_LIBRARY_NAME@)
+set(CRYTPOC_LIBRARIES @LIB_INSTALL_DIR@/@CRYTPOC_LIBRARY_NAME@)

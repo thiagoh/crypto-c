@@ -11,7 +11,7 @@
 void crypto_handle_errors() {
 	ERR_print_errors_fp(stderr);
 	abort();
-};
+}
 
 crypto_data crypto_encrypt(unsigned char* plaintext, int plaintextLength, unsigned char *key, unsigned char* iv) {
 
