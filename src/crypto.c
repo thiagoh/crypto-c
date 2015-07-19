@@ -10,18 +10,14 @@
 
 static void crypto_handle_errors(crypto_data* data) {
 
-	int error = ERR_peek_error();
-	const char* reason = ERR_reason_error_string(error);
-	const char* lib_error = ERR_lib_error_string(error);
+	int errorcode = ERR_peek_error();
+	const char* reason = ERR_reason_error_string(errorcode);
+	const char* lib_error = ERR_lib_error_string(errorcode);
 
-	const char* reasons = "reason: ";
-	const char* errors = " error: ";
-	char* msg = (char*) malloc(strlen(reasons) + strlen(reason) + strlen(lib_error) + 1);
-	strcpy(msg, reasons);
-	strcat(msg, reason);
-	strcat(msg, errors);
-	strcat(msg, lib_error);
-	data->errorMessage = msg;
+	char* errormsg = (char*) malloc(sizeof(char*) * (10 + strlen(reason) + strlen(lib_error)));
+	sprintf(errormsg, "error: %d %s. reason: %s", errorcode, reason, lib_error);
+
+	data->errorMessage = errormsg;
 	data->error = true;
 }
 
