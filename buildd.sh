@@ -10,7 +10,7 @@ if [ ! -f cmocka-1.0.1.tar.xz ]; then
 	mkdir cmocka-build
 
 	cd cmocka-build
-	cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTING=ON ../cmocka-1.0.1
+	cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTING=ON ../cmocka-1.0.1
 	make
 	sudo make install
 	cd ..
@@ -22,7 +22,7 @@ sudo rm -rf build || true
 mkdir build
 cd build
 
-cmake -G"Eclipse CDT4 - Unix Makefiles" -D_ECLIPSE_VERSION=4.5 -DCMAKE_BUILD_TYPE=Debug --debug-output ..
+cmake -G"Eclipse CDT4 - Unix Makefiles" -D_ECLIPSE_VERSION=4.5 -DUNIT_TESTING=ON -DCMAKE_BUILD_TYPE=Debug --debug-output ..
 #cmake --debug-output ..
 
 mv .project ..

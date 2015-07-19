@@ -8,24 +8,52 @@
 #include <crypto.h>
 #include <string.h>
 
-void crypto_handle_errors() {
-	ERR_print_errors_fp(stderr);
-	abort();
+static void crypto_handle_errors(crypto_data* data) {
+
+	int error = ERR_peek_error();
+	const char* reason = ERR_reason_error_string(error);
+	const char* lib_error = ERR_lib_error_string(error);
+
+	const char* reasons = "reason: ";
+	const char* errors = " error: ";
+	char* msg = (char*) malloc(strlen(reasons) + strlen(reason) + strlen(lib_error) + 1);
+	strcpy(msg, reasons);
+	strcat(msg, reason);
+	strcat(msg, errors);
+	strcat(msg, lib_error);
+	data->errorMessage = msg;
+	data->error = true;
+}
+
+static void _finally(EVP_CIPHER_CTX *ctx) {
+
+	/* Clean up */
+	EVP_CIPHER_CTX_free(ctx);
+
+	/* Removes all digests and ciphers */
+	EVP_cleanup();
+
+	/* if you omit the next, a small leak may be left when you make use of the BIO (low level API) for e.g. base64 transformations */
+	CRYPTO_cleanup_all_ex_data();
+
+	/* Remove error strings */
+	ERR_free_strings();
 }
 
 crypto_data crypto_encrypt(unsigned char* plaintext, int plaintextLength, unsigned char *key, unsigned char* iv) {
 
 	crypto_data p;
+	p.error = false;
 
 	if (!plaintext) {
 		p.error = true;
-		p.message = "Plaintext must be defined";
+		p.errorMessage = "Plaintext must be defined";
 		return p;
 	}
 
 	if (plaintextLength < 0) {
 		p.error = true;
-		p.message = "Plaintext length must be positive";
+		p.errorMessage = "Plaintext length must be positive";
 		return p;
 	}
 
@@ -44,9 +72,15 @@ crypto_data crypto_encrypt(unsigned char* plaintext, int plaintextLength, unsign
 
 	int len;
 	int ciphertext_len;
+
 	/* Create and initialise the context */
 	if (!(ctx = EVP_CIPHER_CTX_new()))
-		crypto_handle_errors();
+		crypto_handle_errors(&p);
+
+	if (p.error != 0) {
+		_finally(ctx);
+		return p;
+	}
 
 	/* Initialise the encryption operation. IMPORTANT - ensure you use a key
 	 * and IV size appropriate for your cipher
@@ -54,13 +88,23 @@ crypto_data crypto_encrypt(unsigned char* plaintext, int plaintextLength, unsign
 	 * IV size for *most* modes is the same as the block size. For AES this
 	 * is 128 bits */
 	if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv))
-		crypto_handle_errors();
+		crypto_handle_errors(&p);
+
+	if (p.error != 0) {
+		_finally(ctx);
+		return p;
+	}
 
 	/* Provide the message to be encrypted, and obtain the encrypted output.
 	 * EVP_EncryptUpdate can be called multiple times if necessary
 	 */
 	if (1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintextLength))
-		crypto_handle_errors();
+		crypto_handle_errors(&p);
+
+	if (p.error != 0) {
+		_finally(ctx);
+		return p;
+	}
 
 	ciphertext_len = len;
 
@@ -68,23 +112,16 @@ crypto_data crypto_encrypt(unsigned char* plaintext, int plaintextLength, unsign
 	 * this stage.
 	 */
 	if (1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len))
-		crypto_handle_errors();
+		crypto_handle_errors(&p);
+
+	if (p.error != 0) {
+		_finally(ctx);
+		return p;
+	}
 
 	ciphertext_len += len;
 
-	/* Clean up */
-	EVP_CIPHER_CTX_free(ctx);
-
-	/* Clean up */
-
-	/* Removes all digests and ciphers */
-	EVP_cleanup();
-
-	/* if you omit the next, a small leak may be left when you make use of the BIO (low level API) for e.g. base64 transformations */
-	CRYPTO_cleanup_all_ex_data();
-
-	/* Remove error strings */
-	ERR_free_strings();
+	_finally(ctx);
 
 	p.error = false;
 	p.data = ciphertext;
@@ -96,16 +133,17 @@ crypto_data crypto_encrypt(unsigned char* plaintext, int plaintextLength, unsign
 crypto_data crypto_decrypt(unsigned char* ciphertext, int ciphertextLength, unsigned char *key, unsigned char* iv) {
 
 	crypto_data p;
+	p.error = false;
 
 	if (!ciphertext) {
 		p.error = true;
-		p.message = "Cipher text must be defined";
+		p.errorMessage = "Cipher text must be defined";
 		return p;
 	}
 
 	if (ciphertextLength < 0) {
 		p.error = true;
-		p.message = "Cipher text length must be positive";
+		p.errorMessage = "Cipher text length must be positive";
 		return p;
 	}
 
@@ -127,7 +165,12 @@ crypto_data crypto_decrypt(unsigned char* ciphertext, int ciphertextLength, unsi
 
 	/* Create and initialise the context */
 	if (!(ctx = EVP_CIPHER_CTX_new()))
-		crypto_handle_errors();
+		crypto_handle_errors(&p);
+
+	if (p.error != 0) {
+		_finally(ctx);
+		return p;
+	}
 
 	/* Initialise the decryption operation. IMPORTANT - ensure you use a key
 	 * and IV size appropriate for your cipher
@@ -135,13 +178,23 @@ crypto_data crypto_decrypt(unsigned char* ciphertext, int ciphertextLength, unsi
 	 * IV size for *most* modes is the same as the block size. For AES this
 	 * is 128 bits */
 	if (1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv))
-		crypto_handle_errors();
+		crypto_handle_errors(&p);
+
+	if (p.error != 0) {
+		_finally(ctx);
+		return p;
+	}
 
 	/* Provide the message to be decrypted, and obtain the plaintext output.
 	 * EVP_DecryptUpdate can be called multiple times if necessary
 	 */
 	if (1 != EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertextLength))
-		crypto_handle_errors();
+		crypto_handle_errors(&p);
+
+	if (p.error != 0) {
+		_finally(ctx);
+		return p;
+	}
 
 	plaintext_len = len;
 
@@ -149,21 +202,16 @@ crypto_data crypto_decrypt(unsigned char* ciphertext, int ciphertextLength, unsi
 	 * this stage.
 	 */
 	if (1 != EVP_DecryptFinal_ex(ctx, plaintext + len, &len))
-		crypto_handle_errors();
+		crypto_handle_errors(&p);
+
+	if (p.error != 0) {
+		_finally(ctx);
+		return p;
+	}
 
 	plaintext_len += len;
 
-	/* Clean up */
-	EVP_CIPHER_CTX_free(ctx);
-
-	/* Removes all digests and ciphers */
-	EVP_cleanup();
-
-	/* if you omit the next, a small leak may be left when you make use of the BIO (low level API) for e.g. base64 transformations */
-	CRYPTO_cleanup_all_ex_data();
-
-	/* Remove error strings */
-	ERR_free_strings();
+	_finally(ctx);
 
 	plaintext[plaintext_len] = '\0';
 

@@ -59,8 +59,7 @@ endforeach()
 add_subdirectory(src)
 
 if (UNIT_TESTING)
-    include(AddCryptoCTest)
+    #include(AddCryptoCTest)
     add_subdirectory(test)
+	enable_testing()
 endif (UNIT_TESTING)
-
-enable_testing()
