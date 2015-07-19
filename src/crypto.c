@@ -86,6 +86,9 @@ crypto_data crypto_encrypt(unsigned char* plaintext, int plaintextLength, unsign
 	if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv))
 		crypto_handle_errors(&p);
 
+//	int EVP_CIPHER_key_length(const EVP_CIPHER *cipher);
+//	int EVP_CIPHER_CTX_set_key_length(EVP_CIPHER_CTX *x, int keylen);
+
 	if (p.error != 0) {
 		_finally(ctx);
 		return p;
