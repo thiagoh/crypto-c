@@ -15,7 +15,7 @@
 
 typedef int bool;
 const bool true = 1;
-const bool false = 1;
+const bool false = 0;
 
 typedef struct {
 	unsigned char* data;
@@ -32,6 +32,8 @@ typedef enum {
 	CRYPTO_ENC_NULL,
 //	Null cipher: does nothing.
 
+#ifndef OPENSSL_NO_AES
+
 	CRYPTO_AES_128_CBC, CRYPTO_AES_128_ECB, CRYPTO_AES_128_CFB, CRYPTO_AES_128_OFB,
 //	AES with a 128-bit key in CBC, ECB, CFB and OFB modes respectively.
 
@@ -40,6 +42,8 @@ typedef enum {
 
 	CRYPTO_AES_256_CBC, CRYPTO_AES_256_ECB, CRYPTO_AES_256_CFB, CRYPTO_AES_256_OFB,
 //	AES with a 256-bit key in CBC, ECB, CFB and OFB modes respectively.
+
+#endif
 
 	CRYPTO_DES_CBC, CRYPTO_DES_ECB, CRYPTO_DES_CFB, CRYPTO_DES_OFB,
 //	DES in CBC, ECB, CFB and OFB modes respectively.
@@ -75,20 +79,36 @@ typedef enum {
 	CRYPTO_BF_CBC, CRYPTO_BF_ECB, CRYPTO_BF_CFB, CRYPTO_BF_OFB,
 //	Blowfish encryption algorithm in CBC, ECB, CFB and OFB modes respectively. This is a variable key length cipher.
 
+#ifndef OPENSSL_NO_CAST
+
 	CRYPTO_CAST5_CBC, CRYPTO_CAST5_ECB, CRYPTO_CAST5_CFB, CRYPTO_CAST5_OFB,
 //	CAST encryption algorithm in CBC, ECB, CFB and OFB modes respectively. This is a variable key length cipher.
+
+#endif
+
+#ifndef OPENSSL_NO_RC5
 
 	CRYPTO_RC5_32_12_16_CBC, CRYPTO_RC5_32_12_16_ECB, CRYPTO_RC5_32_12_16_CFB, CRYPTO_RC5_32_12_16_OFB,
 //	RC5 encryption algorithm in CBC, ECB, CFB and OFB modes respectively. This is a variable key length cipher with an additional "number of rounds" parameter. By default the key length is set to 128 bits and 12 rounds.
 
+#endif
+
+#ifndef OPENSSL_NO_AES
+
 	CRYPTO_AES_128_GCM, CRYPTO_AES_192_GCM, CRYPTO_AES_256_GCM,
 //	AES Galois Counter Mode (GCM) for 128, 192 and 256 bit keys respectively. These ciphers require additional control operations to function correctly: see the "GCM and OCB modes" section below for details.
 
-	CRYPTO_AES_128_OCB, CRYPTO_AES_192_OCB, CRYPTO_AES_256_OCB,
-//	Offest Codebook Mode (OCB) for 128, 192 and 256 bit keys respectively. These ciphers require additional control operations to function correctly: see the "GCM and OCB modes" section below for details.
-
 	CRYPTO_AES_128_CCM, CRYPTO_AES_192_CCM, CRYPTO_AES_256_CCM,
 //	AES Counter with CBC-MAC Mode (CCM) for 128, 192 and 256 bit keys respectively. These ciphers require additional control operations to function correctly: see CCM mode section below for details.
+
+#if !defined(OPENSSL_NO_SHA) && !defined(OPENSSL_NO_SHA1)
+	CRYPTO_AES_128_CBC_HMAC_SHA1,
+
+	CRYPTO_AES_256_CBC_HMAC_SHA1
+#endif
+
+#endif
+
 } crypto_cipher_type;
 
 crypto_data crypto_encrypt(crypto_cipher_type type, unsigned char *key, unsigned char* iv, unsigned char* plaintext, int plaintextLength);

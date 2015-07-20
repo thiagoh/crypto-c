@@ -43,6 +43,8 @@ static const EVP_CIPHER* get_cipher_type(crypto_cipher_type type) {
 	if (type == CRYPTO_ENC_NULL) {
 		return EVP_enc_null();
 
+#ifndef OPENSSL_NO_AES
+
 	} else if (type == CRYPTO_AES_128_CBC) {
 		return EVP_aes_128_cbc();
 
@@ -78,6 +80,34 @@ static const EVP_CIPHER* get_cipher_type(crypto_cipher_type type) {
 
 	} else if (type == CRYPTO_AES_256_OFB) {
 		return EVP_aes_256_ofb();
+
+	} else if (type == CRYPTO_AES_128_GCM) {
+		return EVP_aes_128_gcm();
+
+	} else if (type == CRYPTO_AES_192_GCM) {
+		return EVP_aes_192_gcm();
+
+	} else if (type == CRYPTO_AES_256_GCM) {
+		return EVP_aes_256_gcm();
+
+	} else if (type == CRYPTO_AES_128_CCM) {
+		return EVP_aes_128_ccm();
+
+	} else if (type == CRYPTO_AES_192_CCM) {
+		return EVP_aes_192_ccm();
+
+	} else if (type == CRYPTO_AES_256_CCM) {
+		return EVP_aes_256_ccm();
+
+#if !defined(OPENSSL_NO_SHA) && !defined(OPENSSL_NO_SHA1)
+	} else if (type == CRYPTO_AES_128_CBC_HMAC_SHA1) {
+		return EVP_aes_128_cbc_hmac_sha1();
+
+	} else if (type == CRYPTO_AES_256_CBC_HMAC_SHA1) {
+		return EVP_aes_256_cbc_hmac_sha1();
+#endif
+
+#endif
 
 	} else if (type == CRYPTO_DES_CBC) {
 		return EVP_des_cbc();
@@ -170,6 +200,8 @@ static const EVP_CIPHER* get_cipher_type(crypto_cipher_type type) {
 	} else if (type == CRYPTO_BF_OFB) {
 		return EVP_bf_ofb();
 
+#ifndef OPENSSL_NO_CAST
+
 	} else if (type == CRYPTO_CAST5_CBC) {
 		return EVP_cast5_cbc();
 
@@ -181,6 +213,10 @@ static const EVP_CIPHER* get_cipher_type(crypto_cipher_type type) {
 
 	} else if (type == CRYPTO_CAST5_OFB) {
 		return EVP_cast5_ofb();
+
+#endif
+
+#ifndef OPENSSL_NO_RC5
 
 	} else if (type == CRYPTO_RC5_32_12_16_CBC) {
 		return EVP_rc5_32_12_16_cbc();
@@ -194,32 +230,7 @@ static const EVP_CIPHER* get_cipher_type(crypto_cipher_type type) {
 	} else if (type == CRYPTO_RC5_32_12_16_OFB) {
 		return EVP_rc5_32_12_16_ofb();
 
-	} else if (type == CRYPTO_AES_128_GCM) {
-		return EVP_aes_128_gcm();
-
-	} else if (type == CRYPTO_AES_192_GCM) {
-		return EVP_aes_192_gcm();
-
-	} else if (type == CRYPTO_AES_256_GCM) {
-		return EVP_aes_256_gcm();
-
-	} else if (type == CRYPTO_AES_128_OCB) {
-		return EVP_aes_128_ocb();
-
-	} else if (type == CRYPTO_AES_192_OCB) {
-		return EVP_aes_192_ocb();
-
-	} else if (type == CRYPTO_AES_256_OCB) {
-		return EVP_aes_256_ocb();
-
-	} else if (type == CRYPTO_AES_128_CCM) {
-		return EVP_aes_128_ccm();
-
-	} else if (type == CRYPTO_AES_192_CCM) {
-		return EVP_aes_192_ccm();
-
-	} else if (type == CRYPTO_AES_256_CCM) {
-		return EVP_aes_256_ccm();
+#endif
 	} else {
 		return EVP_enc_null();
 	}
