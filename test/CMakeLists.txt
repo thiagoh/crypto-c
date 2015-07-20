@@ -16,13 +16,13 @@ message("OpenSSL version: ${OPENSSL_VERSION}")
 message("OpenSSL include dir: ${OPENSSL_INCLUDE_DIR}")
 message("OpenSSL libraries: ${OPENSSL_LIBRARIES}")
 
-add_executable (test_crypt tests_1.c)
+add_executable (test_cryptoc tests_1.c)
 
-target_link_libraries(test_crypt
+target_link_libraries(test_cryptoc
 	cryptoc
 	cmocka
 	${CMOCKA_SHARED_LIBRARY}
 	${OpenSSL_LIBRARIES}
 	crypto ssl)
 
-add_test(TestCase1 test_crypt)
+add_test(TestCase1 test_cryptoc)
