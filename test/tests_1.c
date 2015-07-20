@@ -27,8 +27,8 @@ static void simple_test_success(void **state) {
 
 	unsigned char* plain = (unsigned char *) "Se hoje é o dia das crianças... Ontem eu disse: o dia da criança é o dia da mãe, dos pais, das professoras, mas também é o dia dos animais, sempre que você olha uma criança, há sempre uma figura oculta, que é um cachorro atrás. O que é algo muito importante!"; //"the fox jumped over the lazy dog";
 
-	crypto_data cipheredPair = crypto_encrypt(plain, strlen((char*) plain), key, iv);
-	crypto_data decipheredPair = crypto_decrypt(cipheredPair.data, cipheredPair.length, key, iv);
+	crypto_data cipheredPair = crypto_encrypt(CRYPTO_AES_192_CBC, key, iv, plain, strlen((char*) plain));
+	crypto_data decipheredPair = crypto_decrypt(CRYPTO_AES_192_CBC, key, iv, cipheredPair.data, cipheredPair.length);
 
 	assert_int_equal(strlen((char*) plain), decipheredPair.length);
 	assert_int_equal(strncmp((const char*)plain, (const char*)decipheredPair.data, strlen((char*)plain)), 0);
@@ -48,7 +48,7 @@ static void simple_test_error(void **state) {
 
 	unsigned char* plain = (unsigned char *) "Se hoje é o dia das crianças... Ontem eu disse: o dia da criança é o dia da mãe, dos pais, das professoras, mas também é o dia dos animais, sempre que você olha uma criança, há sempre uma figura oculta, que é um cachorro atrás. O que é algo muito importante!"; //"the fox jumped over the lazy dog";
 
-	crypto_data decipheredPair = crypto_decrypt(plain, strlen((char*) plain), key, iv);
+	crypto_data decipheredPair = crypto_decrypt(CRYPTO_AES_192_CBC, key, iv, plain, strlen((char*) plain));
 
 	assert_int_equal(decipheredPair.error, true);
 	printf("Error: %s", decipheredPair.errorMessage);

@@ -38,7 +38,194 @@ static void _finally(EVP_CIPHER_CTX *ctx) {
 	ERR_free_strings();
 }
 
-crypto_data crypto_encrypt(unsigned char* plaintext, int plaintextLength, unsigned char *key, unsigned char* iv) {
+static const EVP_CIPHER* get_cipher_type(crypto_cipher_type type) {
+
+	if (type == CRYPTO_ENC_NULL) {
+		return EVP_enc_null();
+
+	} else if (type == CRYPTO_AES_128_CBC) {
+		return EVP_aes_128_cbc();
+
+	} else if (type == CRYPTO_AES_128_ECB) {
+		return EVP_aes_128_ecb();
+
+	} else if (type == CRYPTO_AES_128_CFB) {
+		return EVP_aes_128_cfb();
+
+	} else if (type == CRYPTO_AES_128_OFB) {
+		return EVP_aes_128_ofb();
+
+	} else if (type == CRYPTO_AES_192_CBC) {
+		return EVP_aes_192_cbc();
+
+	} else if (type == CRYPTO_AES_192_ECB) {
+		return EVP_aes_192_ecb();
+
+	} else if (type == CRYPTO_AES_192_CFB) {
+		return EVP_aes_192_cfb();
+
+	} else if (type == CRYPTO_AES_192_OFB) {
+		return EVP_aes_192_ofb();
+
+	} else if (type == CRYPTO_AES_256_CBC) {
+		return EVP_aes_256_cbc();
+
+	} else if (type == CRYPTO_AES_256_ECB) {
+		return EVP_aes_256_ecb();
+
+	} else if (type == CRYPTO_AES_256_CFB) {
+		return EVP_aes_256_cfb();
+
+	} else if (type == CRYPTO_AES_256_OFB) {
+		return EVP_aes_256_ofb();
+
+	} else if (type == CRYPTO_DES_CBC) {
+		return EVP_des_cbc();
+
+	} else if (type == CRYPTO_DES_ECB) {
+		return EVP_des_ecb();
+
+	} else if (type == CRYPTO_DES_CFB) {
+		return EVP_des_cfb();
+
+	} else if (type == CRYPTO_DES_OFB) {
+		return EVP_des_ofb();
+
+	} else if (type == CRYPTO_DES_EDE_CBC) {
+		return EVP_des_cbc();
+
+	} else if (type == CRYPTO_DES_EDE) {
+		return EVP_des_ede();
+
+	} else if (type == CRYPTO_DES_EDE_OFB) {
+		return EVP_des_ede_ofb();
+
+	} else if (type == CRYPTO_DES_EDE_CFB) {
+		return EVP_des_ede_cfb();
+
+	} else if (type == CRYPTO_DES_EDE3_CBC) {
+		return EVP_des_ede3_cbc();
+
+	} else if (type == CRYPTO_DES_EDE3) {
+		return EVP_des_ede3();
+
+	} else if (type == CRYPTO_DES_EDE3_OFB) {
+		return EVP_des_ede3_ofb();
+
+	} else if (type == CRYPTO_DES_EDE3_CFB) {
+		return EVP_des_ede3_cfb();
+
+	} else if (type == CRYPTO_DESX_CBC) {
+		return EVP_desx_cbc();
+
+	} else if (type == CRYPTO_RC4) {
+		return EVP_rc4();
+
+	} else if (type == CRYPTO_RC4_40) {
+		return EVP_rc4_40();
+
+#ifndef OPENSSL_NO_IDEA
+
+	} else if (type == CRYPTO_IDEA_CBC) {
+		return EVP_idea_cbc();
+
+	} else if (type == CRYPTO_IDEA_ECB) {
+		return EVP_idea_ecb();
+
+	} else if (type == CRYPTO_IDEA_CFB) {
+		return EVP_idea_cfb();
+
+	} else if (type == CRYPTO_IDEA_OFB) {
+		return EVP_idea_ofb();
+
+#endif
+
+	} else if (type == CRYPTO_RC2_CBC) {
+		return EVP_rc2_cbc();
+
+	} else if (type == CRYPTO_RC2_ECB) {
+		return EVP_rc2_ecb();
+
+	} else if (type == CRYPTO_RC2_CFB) {
+		return EVP_rc2_cbc();
+
+	} else if (type == CRYPTO_RC2_OFB) {
+		return EVP_rc2_ofb();
+
+	} else if (type == CRYPTO_RC2_40_CBC) {
+		return EVP_rc2_40_cbc();
+
+	} else if (type == CRYPTO_RC2_64_CBC) {
+		return EVP_rc2_64_cbc();
+
+	} else if (type == CRYPTO_BF_CBC) {
+		return EVP_bf_cbc();
+
+	} else if (type == CRYPTO_BF_ECB) {
+		return EVP_bf_ecb();
+
+	} else if (type == CRYPTO_BF_CFB) {
+		return EVP_bf_cfb();
+
+	} else if (type == CRYPTO_BF_OFB) {
+		return EVP_bf_ofb();
+
+	} else if (type == CRYPTO_CAST5_CBC) {
+		return EVP_cast5_cbc();
+
+	} else if (type == CRYPTO_CAST5_ECB) {
+		return EVP_cast5_ecb();
+
+	} else if (type == CRYPTO_CAST5_CFB) {
+		return EVP_cast5_cfb();
+
+	} else if (type == CRYPTO_CAST5_OFB) {
+		return EVP_cast5_ofb();
+
+	} else if (type == CRYPTO_RC5_32_12_16_CBC) {
+		return EVP_rc5_32_12_16_cbc();
+
+	} else if (type == CRYPTO_RC5_32_12_16_ECB) {
+		return EVP_rc5_32_12_16_ecb();
+
+	} else if (type == CRYPTO_RC5_32_12_16_CFB) {
+		return EVP_rc5_32_12_16_cfb();
+
+	} else if (type == CRYPTO_RC5_32_12_16_OFB) {
+		return EVP_rc5_32_12_16_ofb();
+
+	} else if (type == CRYPTO_AES_128_GCM) {
+		return EVP_aes_128_gcm();
+
+	} else if (type == CRYPTO_AES_192_GCM) {
+		return EVP_aes_192_gcm();
+
+	} else if (type == CRYPTO_AES_256_GCM) {
+		return EVP_aes_256_gcm();
+
+	} else if (type == CRYPTO_AES_128_OCB) {
+		return EVP_aes_128_ocb();
+
+	} else if (type == CRYPTO_AES_192_OCB) {
+		return EVP_aes_192_ocb();
+
+	} else if (type == CRYPTO_AES_256_OCB) {
+		return EVP_aes_256_ocb();
+
+	} else if (type == CRYPTO_AES_128_CCM) {
+		return EVP_aes_128_ccm();
+
+	} else if (type == CRYPTO_AES_192_CCM) {
+		return EVP_aes_192_ccm();
+
+	} else if (type == CRYPTO_AES_256_CCM) {
+		return EVP_aes_256_ccm();
+	} else {
+		return EVP_enc_null();
+	}
+}
+
+crypto_data crypto_encrypt(crypto_cipher_type type, unsigned char *key, unsigned char* iv, unsigned char* plaintext, int plaintextLength) {
 
 	crypto_data p;
 	p.error = false;
@@ -100,12 +287,14 @@ crypto_data crypto_encrypt(unsigned char* plaintext, int plaintextLength, unsign
 		return p;
 	}
 
+	const EVP_CIPHER* cipher = get_cipher_type(type);
+
 	/* Initialise the encryption operation. IMPORTANT - ensure you use a key
 	 * and IV size appropriate for your cipher
 	 * In this example we are using 256 bit AES (i.e. a 256 bit key). The
 	 * IV size for *most* modes is the same as the block size. For AES this
 	 * is 128 bits */
-	if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv))
+	if (1 != EVP_EncryptInit_ex(ctx, cipher, NULL, key, iv))
 		crypto_handle_errors(&p);
 
 	if (p.error != 0) {
@@ -148,7 +337,7 @@ crypto_data crypto_encrypt(unsigned char* plaintext, int plaintextLength, unsign
 	return p;
 }
 
-crypto_data crypto_decrypt(unsigned char* ciphertext, int ciphertextLength, unsigned char *key, unsigned char* iv) {
+crypto_data crypto_decrypt(crypto_cipher_type type, unsigned char *key, unsigned char* iv, unsigned char* ciphertext, int ciphertextLength) {
 
 	crypto_data p;
 	p.error = false;
@@ -202,12 +391,14 @@ crypto_data crypto_decrypt(unsigned char* ciphertext, int ciphertextLength, unsi
 		return p;
 	}
 
+	const EVP_CIPHER* cipher = get_cipher_type(type);
+
 	/* Initialise the decryption operation. IMPORTANT - ensure you use a key
 	 * and IV size appropriate for your cipher
 	 * In this example we are using 256 bit AES (i.e. a 256 bit key). The
 	 * IV size for *most* modes is the same as the block size. For AES this
 	 * is 128 bits */
-	if (1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv))
+	if (1 != EVP_DecryptInit_ex(ctx, cipher, NULL, key, iv))
 		crypto_handle_errors(&p);
 
 	if (p.error != 0) {
