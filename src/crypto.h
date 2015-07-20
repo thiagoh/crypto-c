@@ -12,10 +12,7 @@
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <stdio.h>
-
-typedef int bool;
-const bool true = 1;
-const bool false = 0;
+#include <stdbool.h>
 
 typedef struct {
 	unsigned char* data;
