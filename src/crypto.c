@@ -53,7 +53,8 @@ crypto_data crypto_encrypt(unsigned char* plaintext, int plaintextLength, unsign
 		return p;
 	}
 
-	unsigned char* ciphertext = malloc(sizeof(unsigned char) * (plaintextLength + 16));
+	//https://www.openssl.org/docs/crypto/EVP_CIPHER_CTX_set_key_length.html
+	unsigned char* ciphertext = (unsigned char*) malloc(sizeof(unsigned char) * (plaintextLength + EVP_MAX_BLOCK_LENGTH));
 
 	/* Load the human readable error strings for libcrypto */
 	ERR_load_crypto_strings();
@@ -65,6 +66,25 @@ crypto_data crypto_encrypt(unsigned char* plaintext, int plaintextLength, unsign
 	OPENSSL_config(NULL);
 
 	EVP_CIPHER_CTX *ctx;
+
+	//	int EVP_CIPHER_key_length(const EVP_CIPHER *cipher);
+	//	int EVP_CIPHER_CTX_set_key_length(EVP_CIPHER_CTX *x, int keylen);
+
+	if (strlen((char*) key) > EVP_MAX_KEY_LENGTH) {
+		p.error = true;
+		char s[60];
+		sprintf(s, "Error: Key length is greater than the maxminum %d", EVP_MAX_KEY_LENGTH);
+		p.errorMessage = s;
+		return p;
+	}
+
+	if (strlen((char*) iv) > EVP_MAX_IV_LENGTH) {
+		fprintf(stderr, "Warn: IV length is greater than the maxminum %d", EVP_MAX_IV_LENGTH);
+	}
+
+	//https://www.openssl.org/docs/crypto/EVP_CIPHER_CTX_set_key_length.html
+	//OPENSSL_assert(EVP_CIPHER_CTX_key_length(&ctx) == 16);
+	//OPENSSL_assert(EVP_CIPHER_CTX_iv_length(&ctx) == 16);
 
 	int len;
 	int ciphertext_len;
@@ -85,9 +105,6 @@ crypto_data crypto_encrypt(unsigned char* plaintext, int plaintextLength, unsign
 	 * is 128 bits */
 	if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv))
 		crypto_handle_errors(&p);
-
-//	int EVP_CIPHER_key_length(const EVP_CIPHER *cipher);
-//	int EVP_CIPHER_CTX_set_key_length(EVP_CIPHER_CTX *x, int keylen);
 
 	if (p.error != 0) {
 		_finally(ctx);
@@ -146,7 +163,19 @@ crypto_data crypto_decrypt(unsigned char* ciphertext, int ciphertextLength, unsi
 		return p;
 	}
 
-	unsigned char* plaintext = malloc(sizeof(unsigned char) * (ciphertextLength));
+	if (strlen((char*) key) > EVP_MAX_KEY_LENGTH) {
+		p.error = true;
+		char s[60];
+		sprintf(s, "Error: Key length is greater than the maxminum %d", EVP_MAX_KEY_LENGTH);
+		p.errorMessage = s;
+		return p;
+	}
+
+	if (strlen((char*) iv) > EVP_MAX_IV_LENGTH) {
+		fprintf(stderr, "Warn: IV length is greater than the maxminum %d", EVP_MAX_IV_LENGTH);
+	}
+
+	unsigned char* plaintext = (unsigned char*) malloc(sizeof(unsigned char) * (ciphertextLength + EVP_MAX_BLOCK_LENGTH));
 
 	/* Load the human readable error strings for libcrypto */
 	ERR_load_crypto_strings();
@@ -220,3 +249,52 @@ crypto_data crypto_decrypt(unsigned char* ciphertext, int ciphertextLength, unsi
 
 	return p;
 }
+
+//
+// General encryption and decryption function example using FILE I/O and AES128 with a 128-bit key:
+//
+//int do_crypt(FILE *in, FILE *out, int do_encrypt)
+//{
+///* Allow enough space in output buffer for additional block */
+//unsigned char inbuf[1024], outbuf[1024 + EVP_MAX_BLOCK_LENGTH];
+//int inlen, outlen;
+//EVP_CIPHER_CTX ctx;
+///* Bogus key and IV: we'd normally set these from
+//* another source.
+//*/
+//unsigned char key[] = "0123456789abcdeF";
+//unsigned char iv[] = "1234567887654321";
+//
+///* Don't set key or IV right away; we want to check lengths */
+//EVP_CIPHER_CTX_init(&ctx);
+//EVP_CipherInit_ex(&ctx, EVP_aes_128_cbc(), NULL, NULL, NULL,
+//	   do_encrypt);
+//OPENSSL_assert(EVP_CIPHER_CTX_key_length(&ctx) == 16);
+//OPENSSL_assert(EVP_CIPHER_CTX_iv_length(&ctx) == 16);
+//
+///* Now we can set key and IV */
+//EVP_CipherInit_ex(&ctx, NULL, NULL, key, iv, do_encrypt);
+//
+//for(;;)
+//	   {
+//	   inlen = fread(inbuf, 1, 1024, in);
+//	   if(inlen <= 0) break;
+//	   if(!EVP_CipherUpdate(&ctx, outbuf, &outlen, inbuf, inlen))
+//			   {
+//			   /* Error */
+//			   EVP_CIPHER_CTX_cleanup(&ctx);
+//			   return 0;
+//			   }
+//	   fwrite(outbuf, 1, outlen, out);
+//	   }
+//if(!EVP_CipherFinal_ex(&ctx, outbuf, &outlen))
+//	   {
+//	   /* Error */
+//	   EVP_CIPHER_CTX_cleanup(&ctx);
+//	   return 0;
+//	   }
+//fwrite(outbuf, 1, outlen, out);
+//
+//EVP_CIPHER_CTX_cleanup(&ctx);
+//return 1;
+//}

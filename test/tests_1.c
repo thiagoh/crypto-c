@@ -31,7 +31,7 @@ static void simple_test_success(void **state) {
 	crypto_data decipheredPair = crypto_decrypt(cipheredPair.data, cipheredPair.length, key, iv);
 
 	assert_int_equal(strlen((char*) plain), decipheredPair.length);
-	assert_string_equal(plain, decipheredPair.data);
+	assert_int_equal(strncmp((const char*)plain, (const char*)decipheredPair.data, strlen((char*)plain)), 0);
 }
 
 /* A test case that does something with errors. */
