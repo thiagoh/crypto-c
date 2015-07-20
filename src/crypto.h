@@ -12,7 +12,10 @@
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <stdio.h>
-#include <stdbool.h>
+
+typedef enum { false, true } bool;
+false = 0;
+true = 1;
 
 typedef struct {
 	unsigned char* data;
