@@ -236,7 +236,7 @@ static const EVP_CIPHER* get_cipher_type(cryptoc_cipher_type type) {
 	}
 }
 
-cryptoc_data cryptoc_encrypt(cryptoc_cipher_type type, unsigned char *key, unsigned char* iv, unsigned char* plaintext, int plaintextLength) {
+cryptoc_data cryptoc_encrypt(cryptoc_cipher_type type, const unsigned char *key, const unsigned char* iv, const unsigned char* plaintext, int plaintextLength) {
 
 	cryptoc_data p;
 	p.error = false;
@@ -348,7 +348,7 @@ cryptoc_data cryptoc_encrypt(cryptoc_cipher_type type, unsigned char *key, unsig
 	return p;
 }
 
-cryptoc_data cryptoc_decrypt(cryptoc_cipher_type type, unsigned char *key, unsigned char* iv, unsigned char* ciphertext, int ciphertextLength) {
+cryptoc_data cryptoc_decrypt(cryptoc_cipher_type type, const unsigned char *key, const unsigned char* iv, const unsigned char* ciphertext, int ciphertextLength) {
 
 	cryptoc_data p;
 	p.error = false;

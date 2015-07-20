@@ -109,7 +109,7 @@ typedef enum {
 
 } cryptoc_cipher_type;
 
-cryptoc_data cryptoc_encrypt(cryptoc_cipher_type type, unsigned char *key, unsigned char* iv, unsigned char* plaintext, int plaintextLength);
-cryptoc_data cryptoc_decrypt(cryptoc_cipher_type type, unsigned char *key, unsigned char* iv, unsigned char* ciphertext, int ciphertextLength);
+cryptoc_data cryptoc_encrypt(cryptoc_cipher_type type, const unsigned char *key, const unsigned char* iv, const unsigned char* plaintext, int plaintextLength);
+cryptoc_data cryptoc_decrypt(cryptoc_cipher_type type, const unsigned char *key, const unsigned char* iv, const unsigned char* ciphertext, int ciphertextLength);
 
 #endif /* SRC_CRYPTOC_H_ */
