@@ -13,9 +13,7 @@
 #include <openssl/err.h>
 #include <stdio.h>
 
-typedef enum { false, true } bool;
-false = 0;
-true = 1;
+typedef enum { false = 0, true = 1} bool;
 
 typedef struct {
 	unsigned char* data;
