@@ -19,6 +19,8 @@ static void crypto_handle_errors(crypto_data* data) {
 
 	data->errorMessage = errormsg;
 	data->error = true;
+
+	ERR_print_errors_fp(stderr);
 }
 
 static void _finally(EVP_CIPHER_CTX *ctx) {
@@ -53,6 +55,18 @@ crypto_data crypto_encrypt(unsigned char* plaintext, int plaintextLength, unsign
 		return p;
 	}
 
+	if (strlen((char*) key) > EVP_MAX_KEY_LENGTH) {
+		p.error = true;
+		char s[60];
+		sprintf(s, "Error: Key length is greater than the maxminum %d", EVP_MAX_KEY_LENGTH);
+		p.errorMessage = s;
+		return p;
+	}
+
+	if (strlen((char*) iv) > EVP_MAX_IV_LENGTH) {
+		fprintf(stderr, "Warn: IV length is greater than the maxminum %d", EVP_MAX_IV_LENGTH);
+	}
+
 	//https://www.openssl.org/docs/crypto/EVP_CIPHER_CTX_set_key_length.html
 	unsigned char* ciphertext = (unsigned char*) malloc(sizeof(unsigned char) * (plaintextLength + EVP_MAX_BLOCK_LENGTH));
 
@@ -69,18 +83,6 @@ crypto_data crypto_encrypt(unsigned char* plaintext, int plaintextLength, unsign
 
 	//	int EVP_CIPHER_key_length(const EVP_CIPHER *cipher);
 	//	int EVP_CIPHER_CTX_set_key_length(EVP_CIPHER_CTX *x, int keylen);
-
-	if (strlen((char*) key) > EVP_MAX_KEY_LENGTH) {
-		p.error = true;
-		char s[60];
-		sprintf(s, "Error: Key length is greater than the maxminum %d", EVP_MAX_KEY_LENGTH);
-		p.errorMessage = s;
-		return p;
-	}
-
-	if (strlen((char*) iv) > EVP_MAX_IV_LENGTH) {
-		fprintf(stderr, "Warn: IV length is greater than the maxminum %d", EVP_MAX_IV_LENGTH);
-	}
 
 	//https://www.openssl.org/docs/crypto/EVP_CIPHER_CTX_set_key_length.html
 	//OPENSSL_assert(EVP_CIPHER_CTX_key_length(&ctx) == 16);
