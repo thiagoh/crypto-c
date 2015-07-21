@@ -11,6 +11,14 @@
 static void cryptoc_handle_errors(cryptoc_data* data) {
 
 	int errorcode = ERR_peek_error();
+
+	data->error = true;
+
+	if (errorcode == 0) {
+		ERR_print_errors_fp(stderr);
+		return;
+	}
+
 	const char* reason = ERR_reason_error_string(errorcode);
 	const char* lib_error = ERR_lib_error_string(errorcode);
 
@@ -18,7 +26,6 @@ static void cryptoc_handle_errors(cryptoc_data* data) {
 	sprintf(errormsg, "error: %d %s. reason: %s", errorcode, reason, lib_error);
 
 	data->errorMessage = errormsg;
-	data->error = true;
 
 	ERR_print_errors_fp(stderr);
 }
@@ -236,7 +243,17 @@ static const EVP_CIPHER* get_cipher_type(cryptoc_cipher_type type) {
 	}
 }
 
-cryptoc_data cryptoc_encrypt(cryptoc_cipher_type type, const unsigned char *key, const unsigned char* iv, const unsigned char* plaintext, int plaintextLength) {
+cryptoc_data cryptoc_encrypt(cryptoc_cipher_type type, const unsigned char *key, const unsigned char* plaintext, int plaintextLength) {
+
+	return cryptoc_encrypt_iv(type, key, NULL, plaintext, plaintextLength);
+}
+
+cryptoc_data cryptoc_decrypt(cryptoc_cipher_type type, const unsigned char *key, const unsigned char* ciphertext, int ciphertextLength) {
+
+	return cryptoc_decrypt_iv(type, key, NULL, ciphertext, ciphertextLength);
+}
+
+cryptoc_data cryptoc_encrypt_iv(cryptoc_cipher_type type, const unsigned char *key, const unsigned char* iv, const unsigned char* plaintext, int plaintextLength) {
 
 	cryptoc_data p;
 	p.error = false;
@@ -259,10 +276,6 @@ cryptoc_data cryptoc_encrypt(cryptoc_cipher_type type, const unsigned char *key,
 		sprintf(s, "Error: Key length is greater than the maxminum %d", EVP_MAX_KEY_LENGTH);
 		p.errorMessage = s;
 		return p;
-	}
-
-	if (strlen((char*) iv) > EVP_MAX_IV_LENGTH) {
-		fprintf(stderr, "Warn: IV length is greater than the maxminum %d", EVP_MAX_IV_LENGTH);
 	}
 
 	//https://www.openssl.org/docs/crypto/EVP_CIPHER_CTX_set_key_length.html
@@ -293,33 +306,92 @@ cryptoc_data cryptoc_encrypt(cryptoc_cipher_type type, const unsigned char *key,
 	if (!(ctx = EVP_CIPHER_CTX_new()))
 		cryptoc_handle_errors(&p);
 
-	if (p.error != 0) {
+	if (p.error) {
 		_finally(ctx);
 		return p;
 	}
 
 	const EVP_CIPHER* cipher = get_cipher_type(type);
+	unsigned int iv_length = (unsigned int) EVP_CIPHER_iv_length(cipher);
 
-	/* Initialise the encryption operation. IMPORTANT - ensure you use a key
-	 * and IV size appropriate for your cipher
-	 * In this example we are using 256 bit AES (i.e. a 256 bit key). The
-	 * IV size for *most* modes is the same as the block size. For AES this
-	 * is 128 bits */
-	if (1 != EVP_EncryptInit_ex(ctx, cipher, NULL, key, iv))
-		cryptoc_handle_errors(&p);
+	if (iv_length > 0) {
+		if (iv == NULL) {
 
-	if (p.error != 0) {
+			p.error = true;
+			p.errorMessage = "Error: The iv cannot be null";
+			_finally(ctx);
+			return p;
+		}
+
+		if (strlen((char*) iv) > iv_length) {
+			p.error = true;
+			char s[60];
+			sprintf(s, "Error: The iv cannot be greater than %d", EVP_MAX_IV_LENGTH);
+			p.errorMessage = s;
+			_finally(ctx);
+			return p;
+		}
+
+		if (strlen((char*) iv) < iv_length) {
+			p.error = true;
+			char s[60];
+			sprintf(s, "Error: The iv cannot be lower than %d", EVP_MAX_IV_LENGTH);
+			p.errorMessage = s;
+			_finally(ctx);
+			return p;
+		}
+	}
+
+	unsigned long cipher_mode = EVP_CIPHER_mode(cipher);
+
+	if (cipher_mode == EVP_CIPH_CCM_MODE) {
+
+		if(1 != EVP_EncryptInit_ex(ctx, cipher, NULL, NULL, NULL))
+			cryptoc_handle_errors(&p);
+
+		if (p.error) {
+			_finally(ctx);
+			return p;
+		}
+
+		/* Setting IV len to 7. Not strictly necessary as this is the default
+		 * but shown here for the purposes of this example */
+		if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, 7, NULL))
+			handleErrors();
+
+		/* Set tag length */
+		EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_TAG, 14, NULL);
+
+
+		if (1 != EVP_EncryptInit_ex(ctx, NULL, NULL, key, iv))
+			cryptoc_handle_errors(&p);
+
+	} else {
+
+		if (1 != EVP_EncryptInit_ex(ctx, cipher, NULL, key, iv))
+			cryptoc_handle_errors(&p);
+	}
+
+	if (p.error) {
 		_finally(ctx);
 		return p;
 	}
 
-	/* Provide the message to be encrypted, and obtain the encrypted output.
-	 * EVP_EncryptUpdate can be called multiple times if necessary
-	 */
+	if (cipher_mode == EVP_CIPH_CCM_MODE) {
+
+		if (1 != EVP_EncryptUpdate(ctx, NULL, &len, NULL, plaintextLength))
+			cryptoc_handle_errors(&p);
+
+		if (p.error) {
+			_finally(ctx);
+			return p;
+		}
+	}
+
 	if (1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintextLength))
 		cryptoc_handle_errors(&p);
 
-	if (p.error != 0) {
+	if (p.error) {
 		_finally(ctx);
 		return p;
 	}
@@ -332,12 +404,19 @@ cryptoc_data cryptoc_encrypt(cryptoc_cipher_type type, const unsigned char *key,
 	if (1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len))
 		cryptoc_handle_errors(&p);
 
-	if (p.error != 0) {
+	if (p.error) {
 		_finally(ctx);
 		return p;
 	}
 
 	ciphertext_len += len;
+
+	if (cipher_mode == EVP_CIPH_CCM_MODE) {
+
+		/* Get the tag */
+		if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_GET_TAG, 14, NULL))
+			handleErrors();
+	}
 
 	_finally(ctx);
 
@@ -348,7 +427,7 @@ cryptoc_data cryptoc_encrypt(cryptoc_cipher_type type, const unsigned char *key,
 	return p;
 }
 
-cryptoc_data cryptoc_decrypt(cryptoc_cipher_type type, const unsigned char *key, const unsigned char* iv, const unsigned char* ciphertext, int ciphertextLength) {
+cryptoc_data cryptoc_decrypt_iv(cryptoc_cipher_type type, const unsigned char *key, const unsigned char* iv, const unsigned char* ciphertext, int ciphertextLength) {
 
 	cryptoc_data p;
 	p.error = false;
@@ -373,10 +452,6 @@ cryptoc_data cryptoc_decrypt(cryptoc_cipher_type type, const unsigned char *key,
 		return p;
 	}
 
-	if (strlen((char*) iv) > EVP_MAX_IV_LENGTH) {
-		fprintf(stderr, "Warn: IV length is greater than the maxminum %d", EVP_MAX_IV_LENGTH);
-	}
-
 	unsigned char* plaintext = (unsigned char*) malloc(sizeof(unsigned char) * (ciphertextLength + EVP_MAX_BLOCK_LENGTH));
 
 	/* Load the human readable error strings for libcrypto */
@@ -397,24 +472,85 @@ cryptoc_data cryptoc_decrypt(cryptoc_cipher_type type, const unsigned char *key,
 	if (!(ctx = EVP_CIPHER_CTX_new()))
 		cryptoc_handle_errors(&p);
 
-	if (p.error != 0) {
+	if (p.error) {
 		_finally(ctx);
 		return p;
 	}
 
 	const EVP_CIPHER* cipher = get_cipher_type(type);
+	unsigned int iv_length = (unsigned int) EVP_CIPHER_iv_length(cipher);
 
-	/* Initialise the decryption operation. IMPORTANT - ensure you use a key
-	 * and IV size appropriate for your cipher
-	 * In this example we are using 256 bit AES (i.e. a 256 bit key). The
-	 * IV size for *most* modes is the same as the block size. For AES this
-	 * is 128 bits */
-	if (1 != EVP_DecryptInit_ex(ctx, cipher, NULL, key, iv))
-		cryptoc_handle_errors(&p);
+	if (iv_length > 0) {
+		if (iv == NULL) {
+			p.error = true;
+			p.errorMessage = "Error: The iv cannot be null";
+			_finally(ctx);
+			return p;
+		}
 
-	if (p.error != 0) {
+		if (strlen((char*) iv) > iv_length) {
+			p.error = true;
+			char s[60];
+			sprintf(s, "Error: The iv cannot be greater than %d", EVP_MAX_IV_LENGTH);
+			p.errorMessage = s;
+			_finally(ctx);
+			return p;
+		}
+
+		if (strlen((char*) iv) < iv_length) {
+			p.error = true;
+			char s[60];
+			sprintf(s, "Error: The iv cannot be lower than %d", EVP_MAX_IV_LENGTH);
+			p.errorMessage = s;
+			_finally(ctx);
+			return p;
+		}
+	}
+
+	unsigned long cipher_mode = EVP_CIPHER_mode(cipher);
+
+	if (cipher_mode == EVP_CIPH_CCM_MODE) {
+
+		if(1 != EVP_DecryptInit_ex(ctx, cipher, NULL, NULL, NULL))
+			cryptoc_handle_errors(&p);
+
+		if (p.error) {
+			_finally(ctx);
+			return p;
+		}
+
+		/* Setting IV len to 7. Not strictly necessary as this is the default
+		 * but shown here for the purposes of this example */
+		if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, 7, NULL))
+			handleErrors();
+
+		/* Set expected tag value. */
+		if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_TAG, 14, NULL))
+			handleErrors();
+
+		if (1 != EVP_DecryptInit_ex(ctx, NULL, NULL, key, iv))
+			cryptoc_handle_errors(&p);
+
+	} else {
+
+		if (1 != EVP_DecryptInit_ex(ctx, cipher, NULL, key, iv))
+			cryptoc_handle_errors(&p);
+	}
+
+	if (p.error) {
 		_finally(ctx);
 		return p;
+	}
+
+	if (cipher_mode == EVP_CIPH_CCM_MODE) {
+
+		if (1 != EVP_DecryptUpdate(ctx, NULL, &len, NULL, ciphertextLength))
+			cryptoc_handle_errors(&p);
+
+		if (p.error) {
+			_finally(ctx);
+			return p;
+		}
 	}
 
 	/* Provide the message to be decrypted, and obtain the plaintext output.
@@ -423,7 +559,7 @@ cryptoc_data cryptoc_decrypt(cryptoc_cipher_type type, const unsigned char *key,
 	if (1 != EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertextLength))
 		cryptoc_handle_errors(&p);
 
-	if (p.error != 0) {
+	if (p.error) {
 		_finally(ctx);
 		return p;
 	}
@@ -436,7 +572,7 @@ cryptoc_data cryptoc_decrypt(cryptoc_cipher_type type, const unsigned char *key,
 	if (1 != EVP_DecryptFinal_ex(ctx, plaintext + len, &len))
 		cryptoc_handle_errors(&p);
 
-	if (p.error != 0) {
+	if (p.error) {
 		_finally(ctx);
 		return p;
 	}
