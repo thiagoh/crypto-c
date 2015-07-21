@@ -671,7 +671,7 @@ cryptoc_data cryptoc_decrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 
 	_finally(ctx);
 
-	plaintext[plaintext_len] = '\0';
+	//plaintext[plaintext_len] = '\0';
 
 	p.error = false;
 	p.data = plaintext;

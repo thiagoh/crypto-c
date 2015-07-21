@@ -179,8 +179,11 @@ static void simple_test_error(void **state) {
 	unsigned char* plain = (unsigned char *) "Se hoje é o dia das crianças... Ontem eu disse: o dia da criança é o dia da mãe, dos pais, das professoras, mas também é o dia dos animais, sempre que você olha uma criança, há sempre uma figura oculta, que é um cachorro atrás. O que é algo muito importante!"; //"the fox jumped over the lazy dog";
 
 	cryptoc_data decipheredData = cryptoc_decrypt(CRYPTOC_AES_192_CBC, key, plain, strlen((char*) plain));
+	if (!decipheredData.error) {
+		fail_msg("This plain text could not be decrypted");
+	}
+
 	assert_true(decipheredData.error);
-	fail_msg("%s", decipheredData.errorMessage);
 }
 
 int main(void) {
