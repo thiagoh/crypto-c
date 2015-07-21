@@ -357,11 +357,15 @@ cryptoc_data cryptoc_encrypt_iv(cryptoc_cipher_type type, const unsigned char *k
 		/* Setting IV len to 7. Not strictly necessary as this is the default
 		 * but shown here for the purposes of this example */
 		if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, 7, NULL))
-			handleErrors();
+			cryptoc_handle_errors(&p);
+
+		if (p.error) {
+			_finally(ctx);
+			return p;
+		}
 
 		/* Set tag length */
 		EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_TAG, 14, NULL);
-
 
 		if (1 != EVP_EncryptInit_ex(ctx, NULL, NULL, key, iv))
 			cryptoc_handle_errors(&p);
@@ -410,13 +414,6 @@ cryptoc_data cryptoc_encrypt_iv(cryptoc_cipher_type type, const unsigned char *k
 	}
 
 	ciphertext_len += len;
-
-	if (cipher_mode == EVP_CIPH_CCM_MODE) {
-
-		/* Get the tag */
-		if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_GET_TAG, 14, NULL))
-			handleErrors();
-	}
 
 	_finally(ctx);
 
@@ -522,11 +519,21 @@ cryptoc_data cryptoc_decrypt_iv(cryptoc_cipher_type type, const unsigned char *k
 		/* Setting IV len to 7. Not strictly necessary as this is the default
 		 * but shown here for the purposes of this example */
 		if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, 7, NULL))
-			handleErrors();
+			cryptoc_handle_errors(&p);
+
+		if (p.error) {
+			_finally(ctx);
+			return p;
+		}
 
 		/* Set expected tag value. */
 		if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_TAG, 14, NULL))
-			handleErrors();
+			cryptoc_handle_errors(&p);
+
+		if (p.error) {
+			_finally(ctx);
+			return p;
+		}
 
 		if (1 != EVP_DecryptInit_ex(ctx, NULL, NULL, key, iv))
 			cryptoc_handle_errors(&p);
