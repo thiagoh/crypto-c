@@ -372,10 +372,13 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 			return p;
 		}
 
-		/* Setting IV len to 7. Not strictly necessary as this is the default
-		 * but shown here for the purposes of this example */
-		if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, iv_length, NULL))
-			cryptoc_handle_errors(&p);
+		if (cipher_mode == EVP_CIPH_CCM_MODE) {
+			if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, iv_length, NULL))
+				cryptoc_handle_errors(&p);
+		} else if (cipher_mode == EVP_CIPH_GCM_MODE) {
+			if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, iv_length, NULL))
+				cryptoc_handle_errors(&p);
+		}
 
 		if (p.error) {
 			_finally(ctx);
@@ -440,8 +443,13 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 	if (cipher_mode == EVP_CIPH_CCM_MODE || cipher_mode == EVP_CIPH_GCM_MODE) {
 
 		/* Get the tag */
-		if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_GET_TAG, tag_length, tag))
-			cryptoc_handle_errors(&p);
+		if (cipher_mode == EVP_CIPH_CCM_MODE) {
+			if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_GET_TAG, tag_length, tag))
+				cryptoc_handle_errors(&p);
+		} else if (cipher_mode == EVP_CIPH_GCM_MODE) {
+			if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, tag))
+				cryptoc_handle_errors(&p);
+		}
 
 		if (p.error) {
 			_finally(ctx);
@@ -557,19 +565,26 @@ cryptoc_data cryptoc_decrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 			return p;
 		}
 
-		/* Setting IV len to 7. Not strictly necessary as this is the default
-		 * but shown here for the purposes of this example */
-		if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, iv_length, NULL))
-			cryptoc_handle_errors(&p);
+		if (cipher_mode == EVP_CIPH_CCM_MODE) {
+			if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, iv_length, NULL))
+				cryptoc_handle_errors(&p);
+		} else if (cipher_mode == EVP_CIPH_GCM_MODE) {
+				if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, iv_length, NULL))
+					cryptoc_handle_errors(&p);
+			}
 
 		if (p.error) {
 			_finally(ctx);
 			return p;
 		}
 
-		/* Set expected tag value. */
-		if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_TAG, tagLength, tag))
-			cryptoc_handle_errors(&p);
+		if (cipher_mode == EVP_CIPH_CCM_MODE) {
+			if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_TAG, tagLength, tag))
+				cryptoc_handle_errors(&p);
+		} else if (cipher_mode == EVP_CIPH_GCM_MODE) {
+			if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, tagLength, tag))
+				cryptoc_handle_errors(&p);
+		}
 
 		if (p.error) {
 			_finally(ctx);
