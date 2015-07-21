@@ -144,27 +144,106 @@ static void _test_success_loop_iv_aad(cryptoc_cipher_type type, int iv_length, i
 	}
 }
 
+//////////
+//////////   DES(EDE)
+//////////
+
+static void test_success_DESX_CBC(void **state) {
+	_test_success_loop_iv(CRYPTOC_DESX_CBC, 16, LOOP_TESTING_TIMES);
+}
+static void test_success_DES_CBC(void **state) {
+	_test_success_loop_iv(CRYPTOC_DES_CBC, 16, LOOP_TESTING_TIMES);
+}
+static void test_success_DES_CFB(void **state) {
+	_test_success_loop_iv(CRYPTOC_DES_CFB, 16, LOOP_TESTING_TIMES);
+}
+static void test_success_DES_ECB(void **state) {
+	_test_success_loop_iv(CRYPTOC_DES_ECB, 16, LOOP_TESTING_TIMES);
+}
+static void test_success_DES_OFB(void **state) {
+	_test_success_loop_iv(CRYPTOC_DES_OFB, 16, LOOP_TESTING_TIMES);
+}
+static void test_success_DES_EDE_CBC(void **state) {
+	_test_success_loop_iv(CRYPTOC_DES_EDE_CBC, 16, LOOP_TESTING_TIMES);
+}
+static void test_success_DES_EDE_CFB(void **state) {
+	_test_success_loop_iv(CRYPTOC_DES_EDE_CFB, 16, LOOP_TESTING_TIMES);
+}
+static void test_success_DES_EDE_OFB(void **state) {
+	_test_success_loop_iv(CRYPTOC_DES_EDE_OFB, 16, LOOP_TESTING_TIMES);
+}
+static void test_success_DES_EDE3(void **state) {
+	_test_success_loop_iv(CRYPTOC_DES_EDE3, 16, LOOP_TESTING_TIMES);
+}
+static void test_success_DES_EDE3_CBC(void **state) {
+	_test_success_loop_iv(CRYPTOC_DES_EDE3_CBC, 16, LOOP_TESTING_TIMES);
+}
+static void test_success_DES_EDE3_CFB(void **state) {
+	_test_success_loop_iv(CRYPTOC_DES_EDE3_CFB, 16, LOOP_TESTING_TIMES);
+}
+static void test_success_DES_EDE3_OFB(void **state) {
+	_test_success_loop_iv(CRYPTOC_DES_EDE3_OFB, 16, LOOP_TESTING_TIMES);
+}
+
+//////////
+//////////   AES
+//////////
+
+static void test_success_AES_128_CBC(void **state) {
+	_test_success_loop_iv(CRYPTOC_AES_128_CBC, 16, LOOP_TESTING_TIMES);
+}
+static void test_success_AES_128_CCM(void **state) {
+	_test_success_loop_iv_aad(CRYPTOC_AES_128_CCM, 12, LOOP_TESTING_TIMES);
+}
+static void test_success_AES_128_CFB(void **state) {
+	_test_success_loop_iv(CRYPTOC_AES_128_CFB, 16, LOOP_TESTING_TIMES);
+}
+static void test_success_AES_128_GCM(void **state) {
+	_test_success_loop_iv_aad(CRYPTOC_AES_128_GCM, 12, LOOP_TESTING_TIMES);
+}
+static void test_success_AES_128_OFB(void **state) {
+	_test_success_loop_iv(CRYPTOC_AES_128_OFB, 16, LOOP_TESTING_TIMES);
+}
+static void test_success_AES_128_ECB(void **state) {
+	_test_success_loop(CRYPTOC_AES_128_ECB, LOOP_TESTING_TIMES);
+}
+
 static void test_success_AES_192_CBC(void **state) {
 	_test_success_loop_iv(CRYPTOC_AES_192_CBC, 16, LOOP_TESTING_TIMES);
 }
-
 static void test_success_AES_192_CCM(void **state) {
 	_test_success_loop_iv_aad(CRYPTOC_AES_192_CCM, 12, LOOP_TESTING_TIMES);
 }
 static void test_success_AES_192_CFB(void **state) {
 	_test_success_loop_iv(CRYPTOC_AES_192_CFB, 16, LOOP_TESTING_TIMES);
 }
-
 static void test_success_AES_192_GCM(void **state) {
 	_test_success_loop_iv_aad(CRYPTOC_AES_192_GCM, 12, LOOP_TESTING_TIMES);
 }
-
 static void test_success_AES_192_OFB(void **state) {
 	_test_success_loop_iv(CRYPTOC_AES_192_OFB, 16, LOOP_TESTING_TIMES);
 }
-
 static void test_success_AES_192_ECB(void **state) {
 	_test_success_loop(CRYPTOC_AES_192_ECB, LOOP_TESTING_TIMES);
+}
+
+static void test_success_AES_256_CBC(void **state) {
+	_test_success_loop_iv(CRYPTOC_AES_256_CBC, 16, LOOP_TESTING_TIMES);
+}
+static void test_success_AES_256_CCM(void **state) {
+	_test_success_loop_iv_aad(CRYPTOC_AES_256_CCM, 12, LOOP_TESTING_TIMES);
+}
+static void test_success_AES_256_CFB(void **state) {
+	_test_success_loop_iv(CRYPTOC_AES_256_CFB, 16, LOOP_TESTING_TIMES);
+}
+static void test_success_AES_256_GCM(void **state) {
+	_test_success_loop_iv_aad(CRYPTOC_AES_256_GCM, 12, LOOP_TESTING_TIMES);
+}
+static void test_success_AES_256_OFB(void **state) {
+	_test_success_loop_iv(CRYPTOC_AES_256_OFB, 16, LOOP_TESTING_TIMES);
+}
+static void test_success_AES_256_ECB(void **state) {
+	_test_success_loop(CRYPTOC_AES_256_ECB, LOOP_TESTING_TIMES);
 }
 
 /* A test case that does something with errors. */
@@ -195,12 +274,40 @@ int main(void) {
 
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(null_test_success),
+
+		cmocka_unit_test(test_success_DESX_CBC),
+		cmocka_unit_test(test_success_DES_CBC),
+		cmocka_unit_test(test_success_DES_CFB),
+		cmocka_unit_test(test_success_DES_ECB),
+		cmocka_unit_test(test_success_DES_OFB),
+		cmocka_unit_test(test_success_DES_EDE_CBC),
+		cmocka_unit_test(test_success_DES_EDE_CFB),
+		cmocka_unit_test(test_success_DES_EDE_OFB),
+		cmocka_unit_test(test_success_DES_EDE3),
+		cmocka_unit_test(test_success_DES_EDE3_CBC),
+		cmocka_unit_test(test_success_DES_EDE3_CFB),
+		cmocka_unit_test(test_success_DES_EDE3_OFB),
+
+		cmocka_unit_test(test_success_AES_128_CBC),
+		cmocka_unit_test(test_success_AES_128_CCM),
+		cmocka_unit_test(test_success_AES_128_CFB),
+		cmocka_unit_test(test_success_AES_128_ECB),
+		cmocka_unit_test(test_success_AES_128_GCM),
+		cmocka_unit_test(test_success_AES_128_OFB),
+
 		cmocka_unit_test(test_success_AES_192_CBC),
 		cmocka_unit_test(test_success_AES_192_CCM),
 		cmocka_unit_test(test_success_AES_192_CFB),
 		cmocka_unit_test(test_success_AES_192_ECB),
 		cmocka_unit_test(test_success_AES_192_GCM),
 		cmocka_unit_test(test_success_AES_192_OFB),
+
+		cmocka_unit_test(test_success_AES_256_CBC),
+		cmocka_unit_test(test_success_AES_256_CCM),
+		cmocka_unit_test(test_success_AES_256_CFB),
+		cmocka_unit_test(test_success_AES_256_ECB),
+		cmocka_unit_test(test_success_AES_256_GCM),
+		cmocka_unit_test(test_success_AES_256_OFB),
         cmocka_unit_test(simple_test_error),
     };
 

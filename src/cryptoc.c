@@ -289,7 +289,7 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 		return p;
 	}
 
-	//https://www.openssl.org/docs/crypto/EVP_CIPHER_CTX_set_key_length.html
+	// https://www.openssl.org/docs/crypto/EVP_CIPHER_CTX_set_key_length.html
 	unsigned char* ciphertext = (unsigned char*) malloc(sizeof(unsigned char) * (plaintextLength + EVP_MAX_BLOCK_LENGTH));
 	int tag_length = 16;
 
