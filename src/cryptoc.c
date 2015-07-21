@@ -326,10 +326,11 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 	const EVP_CIPHER* cipher = get_cipher_type(type);
 	unsigned int cipher_iv_length = (unsigned int) EVP_CIPHER_iv_length(cipher);
 	unsigned int iv_length = cipher_iv_length;
+	unsigned char* effective_iv = (unsigned char*) malloc(cipher_iv_length);
 
 	if (cipher_iv_length > 0) {
-		if (iv == NULL) {
 
+		if (iv == NULL) {
 			p.error = true;
 			p.errorMessage = "Error: The iv cannot be null";
 			_finally(ctx);
@@ -337,12 +338,7 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 		}
 
 		if (strlen((char*) iv) > cipher_iv_length) {
-			p.error = true;
-			char s[60];
-			sprintf(s, "Error: The iv cannot be greater than %d", EVP_MAX_IV_LENGTH);
-			p.errorMessage = s;
-			_finally(ctx);
-			return p;
+			fprintf(stderr, "Warn: The iv cannot be greater than %d so it was truncated\n", cipher_iv_length);
 		}
 
 		if (strlen((char*) iv) < cipher_iv_length) {
@@ -354,7 +350,8 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 			return p;
 		}
 
-		iv_length = strlen((char*) iv);
+		strncpy((char*) effective_iv, (const char*) iv, cipher_iv_length);
+		iv_length = strlen((char*) effective_iv);
 	}
 
 	unsigned long cipher_mode = EVP_CIPHER_mode(cipher);
@@ -395,12 +392,12 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 			EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_TAG, tag_length, NULL);
 		}
 
-		if (1 != EVP_EncryptInit_ex(ctx, NULL, NULL, key, iv))
+		if (1 != EVP_EncryptInit_ex(ctx, NULL, NULL, key, effective_iv))
 			cryptoc_handle_errors(&p);
 
 	} else {
 
-		if (1 != EVP_EncryptInit_ex(ctx, cipher, NULL, key, iv))
+		if (1 != EVP_EncryptInit_ex(ctx, cipher, NULL, key, effective_iv))
 			cryptoc_handle_errors(&p);
 	}
 
@@ -539,8 +536,10 @@ cryptoc_data cryptoc_decrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 	const EVP_CIPHER* cipher = get_cipher_type(type);
 	unsigned int cipher_iv_length = (unsigned int) EVP_CIPHER_iv_length(cipher);
 	unsigned int iv_length = cipher_iv_length;
+	unsigned char* effective_iv = (unsigned char*) malloc(cipher_iv_length);
 
 	if (cipher_iv_length > 0) {
+
 		if (iv == NULL) {
 			p.error = true;
 			p.errorMessage = "Error: The iv cannot be null";
@@ -549,12 +548,7 @@ cryptoc_data cryptoc_decrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 		}
 
 		if (strlen((char*) iv) > cipher_iv_length) {
-			p.error = true;
-			char s[60];
-			sprintf(s, "Error: The iv cannot be greater than %d", EVP_MAX_IV_LENGTH);
-			p.errorMessage = s;
-			_finally(ctx);
-			return p;
+			fprintf(stderr, "Warn: The iv cannot be greater than %d so it was truncated", cipher_iv_length);
 		}
 
 		if (strlen((char*) iv) < cipher_iv_length) {
@@ -566,7 +560,8 @@ cryptoc_data cryptoc_decrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 			return p;
 		}
 
-		iv_length = strlen((char*) iv);
+		strncpy((char*) effective_iv, (const char*) iv, cipher_iv_length);
+		iv_length = strlen((char*) effective_iv);
 	}
 
 	unsigned long cipher_mode = EVP_CIPHER_mode(cipher);
@@ -612,12 +607,12 @@ cryptoc_data cryptoc_decrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 			return p;
 		}
 
-		if (1 != EVP_DecryptInit_ex(ctx, NULL, NULL, key, iv))
+		if (1 != EVP_DecryptInit_ex(ctx, NULL, NULL, key, effective_iv))
 			cryptoc_handle_errors(&p);
 
 	} else {
 
-		if (1 != EVP_DecryptInit_ex(ctx, cipher, NULL, key, iv))
+		if (1 != EVP_DecryptInit_ex(ctx, cipher, NULL, key, effective_iv))
 			cryptoc_handle_errors(&p);
 	}
 
