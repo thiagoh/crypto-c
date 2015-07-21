@@ -404,7 +404,7 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 		return p;
 	}
 
-	if (cipher_mode == EVP_CIPH_CCM_MODE || cipher_mode == EVP_CIPH_GCM_MODE) {
+	if (cipher_mode == EVP_CIPH_CCM_MODE) {
 
 		if (1 != EVP_EncryptUpdate(ctx, NULL, &len, NULL, plaintextLength))
 			cryptoc_handle_errors(&p);
@@ -412,6 +412,19 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 		if (p.error) {
 			_finally(ctx);
 			return p;
+		}
+	}
+
+	if (aad_len > 0) {
+		if (cipher_mode == EVP_CIPH_CCM_MODE || cipher_mode == EVP_CIPH_GCM_MODE) {
+			/* Provide any AAD data. This can be called zero or one times as required */
+			if(1 != EVP_EncryptUpdate(ctx, NULL, &len, aad, aad_len))
+				cryptoc_handle_errors(&p);
+
+			if (p.error) {
+				_finally(ctx);
+				return p;
+			}
 		}
 	}
 
@@ -424,8 +437,6 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 	}
 
 	ciphertext_len = len;
-
-
 
 	/* Finalise the encryption. Further ciphertext bytes may be written at
 	 * this stage.
@@ -447,7 +458,7 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 			if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_GET_TAG, tag_length, tag))
 				cryptoc_handle_errors(&p);
 		} else if (cipher_mode == EVP_CIPH_GCM_MODE) {
-			if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, tag))
+			if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, tag_length, tag))
 				cryptoc_handle_errors(&p);
 		}
 
@@ -605,7 +616,7 @@ cryptoc_data cryptoc_decrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 		return p;
 	}
 
-	if (cipher_mode == EVP_CIPH_CCM_MODE || cipher_mode == EVP_CIPH_GCM_MODE) {
+	if (cipher_mode == EVP_CIPH_CCM_MODE) {
 
 		if (1 != EVP_DecryptUpdate(ctx, NULL, &len, NULL, ciphertextLength))
 			cryptoc_handle_errors(&p);
@@ -613,6 +624,19 @@ cryptoc_data cryptoc_decrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 		if (p.error) {
 			_finally(ctx);
 			return p;
+		}
+	}
+
+	if (aad_len > 0) {
+		if (cipher_mode == EVP_CIPH_CCM_MODE || cipher_mode == EVP_CIPH_GCM_MODE) {
+			/* Provide any AAD data. This can be called zero or more times as required */
+			if(1 != EVP_DecryptUpdate(ctx, NULL, &len, aad, aad_len))
+				cryptoc_handle_errors(&p);
+
+			if (p.error) {
+				_finally(ctx);
+				return p;
+			}
 		}
 	}
 
