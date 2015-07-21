@@ -362,6 +362,11 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 
 	if (cipher_mode == EVP_CIPH_CCM_MODE || cipher_mode == EVP_CIPH_GCM_MODE) {
 
+		/**
+		 * CCM and GCM documentation
+		 * https://wiki.openssl.org/index.php/EVP_Authenticated_Encryption_and_Decryption#Authenticated_Decryption_using_CCM_mode
+		 */
+
 		tag = (unsigned char*) malloc(sizeof(unsigned char) * (tag_length));
 
 		if(1 != EVP_EncryptInit_ex(ctx, cipher, NULL, NULL, NULL))
@@ -567,6 +572,11 @@ cryptoc_data cryptoc_decrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 	unsigned long cipher_mode = EVP_CIPHER_mode(cipher);
 
 	if (cipher_mode == EVP_CIPH_CCM_MODE || cipher_mode == EVP_CIPH_GCM_MODE) {
+
+		/**
+		 * CCM and GCM documentation
+		 * https://wiki.openssl.org/index.php/EVP_Authenticated_Encryption_and_Decryption#Authenticated_Decryption_using_CCM_mode
+		 */
 
 		if(1 != EVP_DecryptInit_ex(ctx, cipher, NULL, NULL, NULL))
 			cryptoc_handle_errors(&p);
