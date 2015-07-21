@@ -108,19 +108,55 @@ static void _test_success_loop_iv(cryptoc_cipher_type type, int iv_length, int t
 	}
 }
 
+static void _test_success_iv_aad(cryptoc_cipher_type type, const unsigned char *key, const unsigned char *iv, const unsigned char *plain) {
+
+	cryptoc_data cipheredData = cryptoc_encrypt_iv_aad(type, key, iv, NULL, 0, plain, strlen((char*) plain));
+	if (cipheredData.error) {
+		fail_msg("%s", cipheredData.errorMessage);
+		assert_false(cipheredData.error);
+	}
+
+	cryptoc_data decipheredData = cryptoc_decrypt_iv_aad(type, key, iv, NULL, 0, cipheredData.tag, cipheredData.tagLength, cipheredData.data, cipheredData.length);
+	if (decipheredData.error) {
+		fail_msg("%s", decipheredData.errorMessage);
+		assert_false(decipheredData.error);
+	}
+
+	assert_int_equal(strlen((char*) plain), decipheredData.length);
+	assert_int_equal(strncmp((const char*)plain, (const char*)decipheredData.data, strlen((char*)plain)), 0);
+}
+
+static void _test_success_loop_iv_aad(cryptoc_cipher_type type, int iv_length, int times) {
+
+	int i;
+	/* A 256 bit key */
+	unsigned char *rkey;
+	unsigned char *riv;
+	unsigned char* rplain;
+
+	for (i = 0; i < times; i++) {
+
+		rkey = gen_random(32);
+		riv = gen_random(iv_length);
+		rplain = gen_random(1024);
+
+		_test_success_iv_aad(type, rkey, riv, rplain);
+	}
+}
+
 static void test_success_AES_192_CBC(void **state) {
 	_test_success_loop_iv(CRYPTOC_AES_192_CBC, 16, LOOP_TESTING_TIMES);
 }
 
 static void test_success_AES_192_CCM(void **state) {
-	_test_success_loop_iv(CRYPTOC_AES_192_CCM, 12, LOOP_TESTING_TIMES);
+	_test_success_loop_iv_aad(CRYPTOC_AES_192_CCM, 12, LOOP_TESTING_TIMES);
 }
 static void test_success_AES_192_CFB(void **state) {
 	_test_success_loop_iv(CRYPTOC_AES_192_CFB, 16, LOOP_TESTING_TIMES);
 }
 
 static void test_success_AES_192_GCM(void **state) {
-	_test_success_loop_iv(CRYPTOC_AES_192_GCM, 12, LOOP_TESTING_TIMES);
+	_test_success_loop_iv_aad(CRYPTOC_AES_192_GCM, 12, LOOP_TESTING_TIMES);
 }
 
 static void test_success_AES_192_OFB(void **state) {
