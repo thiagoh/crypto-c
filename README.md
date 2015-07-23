@@ -14,8 +14,21 @@ const char* plaintext = "the fox jumped over the lazy dog";
 
 The default cipher mode is CBC and algorithm is 3DES_EDE 
 
-cryptoc_data ciphertext = cryptoc_encrypt(plaintext, strlen(plaintext), key, iv, &len);
-cryptoc_data newplaintext = cryptoc_decrypt(ciphertext, strlen(ciphertext), key, iv, &newlen);
+cryptoc_data ciphertext = cryptoc_encrypt_iv(plaintext, strlen(plaintext), key, iv, &len);
+
+if (ciphertext.error) {
+  // do something on error
+  printf("%s", ciphertext.errorMessage);
+}
+
+cryptoc_data newplaintext = cryptoc_decrypt_iv(ciphertext, strlen(ciphertext), key, iv, &newlen);
+
+if (newplaintext.error) {
+  // do something on error
+  printf("%s", newplaintext.errorMessage);
+}
+
+// if there are no errors...
 
 ciphertext.first; // data encrypted
 ciphertext.second; // length
