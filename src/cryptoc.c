@@ -22,8 +22,8 @@ static void cryptoc_handle_errors(cryptoc_data* data) {
 	const char* reason = ERR_reason_error_string(errorcode);
 	const char* lib_error = ERR_lib_error_string(errorcode);
 
-	char* errormsg = (char*) malloc(sizeof(char) * (10 + strlen(reason) + strlen(lib_error)));
-	sprintf(errormsg, "error: %d %s. reason: %s", errorcode, reason, lib_error);
+	char errormsg[1024];
+	sprintf(errormsg, "Error: %d %s. reason: %s", errorcode, reason, lib_error);
 
 	data->errorMessage = errormsg;
 
@@ -243,27 +243,27 @@ static const EVP_CIPHER* get_cipher_type(cryptoc_cipher_type type) {
 	}
 }
 
-cryptoc_data cryptoc_encrypt(cryptoc_cipher_type type, const unsigned char *key, const unsigned char* plaintext, int plaintextLength) {
+cryptoc_data cryptoc_encrypt(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char* plaintext, int plaintextLength) {
 
-	return cryptoc_encrypt_iv(type, key, NULL, plaintext, plaintextLength);
+	return cryptoc_encrypt_iv(type, key, keyLength, NULL, 0, plaintext, plaintextLength);
 }
 
-cryptoc_data cryptoc_decrypt(cryptoc_cipher_type type, const unsigned char *key, const unsigned char* ciphertext, int ciphertextLength) {
+cryptoc_data cryptoc_decrypt(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char* ciphertext, int ciphertextLength) {
 
-	return cryptoc_decrypt_iv(type, key, NULL, ciphertext, ciphertextLength);
+	return cryptoc_decrypt_iv(type, key, keyLength, NULL, 0, ciphertext, ciphertextLength);
 }
 
-cryptoc_data cryptoc_encrypt_iv(cryptoc_cipher_type type, const unsigned char *key, const unsigned char* iv, const unsigned char* plaintext, int plaintextLength) {
+cryptoc_data cryptoc_encrypt_iv(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char* iv, int ivLength, const unsigned char* plaintext, int plaintextLength) {
 
-	return cryptoc_encrypt_iv_aad(type, key, iv, NULL, 0, plaintext, plaintextLength);
+	return cryptoc_encrypt_iv_aad(type, key, keyLength, iv, ivLength, NULL, 0, plaintext, plaintextLength);
 }
 
-cryptoc_data cryptoc_decrypt_iv(cryptoc_cipher_type type, const unsigned char *key, const unsigned char* iv, const unsigned char* ciphertext, int ciphertextLength) {
+cryptoc_data cryptoc_decrypt_iv(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char* iv, int ivLength, const unsigned char* ciphertext, int ciphertextLength) {
 
-	return cryptoc_decrypt_iv_aad(type, key, iv, NULL, 0, NULL, 0, ciphertext, ciphertextLength);
+	return cryptoc_decrypt_iv_aad(type, key, keyLength, iv, ivLength, NULL, 0, NULL, 0, ciphertext, ciphertextLength);
 }
 
-cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned char *key, const unsigned char* iv, unsigned char *aad,
+cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char* iv, int ivLength, unsigned char *aad,
 		int aad_len, const unsigned char* plaintext, int plaintextLength) {
 
 	cryptoc_data p;
@@ -289,7 +289,7 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 		return p;
 	}
 
-	if (strlen((char*) key) > EVP_MAX_KEY_LENGTH) {
+	if (keyLength > EVP_MAX_KEY_LENGTH) {
 		p.error = true;
 		char s[60];
 		sprintf(s, "Error: Key length is greater than the maxminum %d", EVP_MAX_KEY_LENGTH);
@@ -333,7 +333,6 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 
 	const EVP_CIPHER* cipher = get_cipher_type(type);
 	unsigned int cipher_iv_length = (unsigned int) EVP_CIPHER_iv_length(cipher);
-	unsigned int iv_length = cipher_iv_length;
 	unsigned char* effective_iv = (unsigned char*) malloc(cipher_iv_length);
 
 	if (cipher_iv_length > 0) {
@@ -347,7 +346,7 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 			return p;
 		}
 
-		if (strlen((char*) iv) < cipher_iv_length) {
+		if (ivLength < cipher_iv_length) {
 			p.error = true;
 			char s[60];
 			sprintf(s, "Error: The iv cannot be lower than %d");
@@ -356,15 +355,19 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 			return p;
 		}
 
-		if (strlen((char*) iv) > cipher_iv_length) {
-			fprintf(stderr, "Warn: The iv cannot be greater than %d so it was truncated\n", cipher_iv_length);
+		if (ivLength > cipher_iv_length) {
+
+			char* warnings = getenv("CRYPTOC_ENABLE_WARNING");
+			if (warnings != 0 && (strcmp(warnings, "on") == 0 || strcmp(warnings, "true") == 0 || strcmp(warnings, "1") == 0)) {
+				fprintf(stderr, "Warn: The iv cannot be greater than %d so it was truncated\n", cipher_iv_length);
+			}
 
 			strncpy((char*) effective_iv, (const char*) iv, cipher_iv_length);
 			effective_iv[cipher_iv_length] = '\0';
-			iv_length = strlen((char*) effective_iv);
+			ivLength = cipher_iv_length;
+
 		} else {
 			strcpy((char*) effective_iv, (const char*) iv);
-			iv_length = strlen((char*) effective_iv);
 		}
 	}
 
@@ -389,10 +392,10 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 		}
 
 		if (cipher_mode == EVP_CIPH_CCM_MODE) {
-			if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, iv_length, NULL))
+			if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, ivLength, NULL))
 				cryptoc_handle_errors(&p);
 		} else if (cipher_mode == EVP_CIPH_GCM_MODE) {
-			if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, iv_length, NULL))
+			if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, ivLength, NULL))
 				cryptoc_handle_errors(&p);
 		}
 
@@ -496,7 +499,7 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 	return p;
 }
 
-cryptoc_data cryptoc_decrypt_iv_aad(cryptoc_cipher_type type, const unsigned char *key, const unsigned char* iv, unsigned char *aad,
+cryptoc_data cryptoc_decrypt_iv_aad(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char* iv, int ivLength, unsigned char *aad,
 		int aad_len, unsigned char *tag, int tagLength, const unsigned char* ciphertext, int ciphertextLength) {
 
 	cryptoc_data p;
@@ -522,7 +525,7 @@ cryptoc_data cryptoc_decrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 		return p;
 	}
 
-	if (strlen((char*) key) > EVP_MAX_KEY_LENGTH) {
+	if (keyLength > EVP_MAX_KEY_LENGTH) {
 		p.error = true;
 		char s[60];
 		sprintf(s, "Error: Key length is greater than the maxminum %d", EVP_MAX_KEY_LENGTH);
@@ -557,7 +560,6 @@ cryptoc_data cryptoc_decrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 
 	const EVP_CIPHER* cipher = get_cipher_type(type);
 	unsigned int cipher_iv_length = (unsigned int) EVP_CIPHER_iv_length(cipher);
-	unsigned int iv_length = cipher_iv_length;
 	unsigned char* effective_iv = (unsigned char*) malloc(cipher_iv_length);
 
 	if (cipher_iv_length > 0) {
@@ -571,7 +573,7 @@ cryptoc_data cryptoc_decrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 			return p;
 		}
 
-		if (strlen((char*) iv) < cipher_iv_length) {
+		if (ivLength < cipher_iv_length) {
 			p.error = true;
 			char s[60];
 			sprintf(s, "Error: The iv cannot be lower than %d", EVP_MAX_IV_LENGTH);
@@ -580,15 +582,18 @@ cryptoc_data cryptoc_decrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 			return p;
 		}
 
-		if (strlen((char*) iv) > cipher_iv_length) {
-			fprintf(stderr, "Warn: The iv cannot be greater than %d so it was truncated\n", cipher_iv_length);
+		if (ivLength > cipher_iv_length) {
+
+			char* warnings = getenv("CRYPTOC_ENABLE_WARNING");
+			if (warnings != 0 && (strcmp(warnings, "on") == 0 || strcmp(warnings, "true") == 0 || strcmp(warnings, "1") == 0)) {
+				fprintf(stderr, "Warn: The iv cannot be greater than %d so it was truncated\n", cipher_iv_length);
+			}
 
 			strncpy((char*) effective_iv, (const char*) iv, cipher_iv_length);
 			effective_iv[cipher_iv_length] = '\0';
-			iv_length = strlen((char*) effective_iv);
+			ivLength = cipher_iv_length;
 		} else {
 			strcpy((char*) effective_iv, (const char*) iv);
-			iv_length = strlen((char*) effective_iv);
 		}
 	}
 
@@ -610,10 +615,10 @@ cryptoc_data cryptoc_decrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 		}
 
 		if (cipher_mode == EVP_CIPH_CCM_MODE) {
-			if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, iv_length, NULL))
+			if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, ivLength, NULL))
 				cryptoc_handle_errors(&p);
 		} else if (cipher_mode == EVP_CIPH_GCM_MODE) {
-				if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, iv_length, NULL))
+				if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, ivLength, NULL))
 					cryptoc_handle_errors(&p);
 			}
 

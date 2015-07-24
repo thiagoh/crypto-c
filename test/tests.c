@@ -11,9 +11,7 @@
 #define UNIT_TESTING 1
 const int LOOP_TESTING_TIMES = 200;
 
-static unsigned char* gen_random(const int len) {
-
-	unsigned char *s = (unsigned char*) malloc(sizeof(unsigned char*) * (len + 1));
+static void gen_random(unsigned char *s, const int len) {
 
     static const char alphanum[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%*()_+{^'`^~[]{};:.>,</?\\\"'";
 
@@ -22,7 +20,6 @@ static unsigned char* gen_random(const int len) {
     }
 
     s[len] = '\0';
-    return s;
 }
 
 /* A test case that does nothing and succeeds. */
@@ -31,15 +28,15 @@ static void null_test_success(void **state) {
     (void) state; /* unused */
 }
 
-static void _test_success(cryptoc_cipher_type type, const unsigned char *key, const unsigned char *plain) {
+static void _test_success(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char *plain, int plainLength) {
 
-	cryptoc_data cipheredData = cryptoc_encrypt(type, key, plain, strlen((char*) plain));
+	cryptoc_data cipheredData = cryptoc_encrypt(type, key, keyLength, plain, plainLength);
 	if (cipheredData.error) {
 		fail_msg("%s", cipheredData.errorMessage);
 		assert_false(cipheredData.error);
 	}
 
-	cryptoc_data decipheredData = cryptoc_decrypt(type, key, cipheredData.data, cipheredData.length);
+	cryptoc_data decipheredData = cryptoc_decrypt(type, key, keyLength, cipheredData.data, cipheredData.length);
 	if (decipheredData.error) {
 		fail_msg("%s", decipheredData.errorMessage);
 		assert_false(decipheredData.error);
@@ -51,37 +48,32 @@ static void _test_success(cryptoc_cipher_type type, const unsigned char *key, co
 
 static void _test_success_loop(cryptoc_cipher_type type, int times) {
 
-	/* A 256 bit key */
-	static const unsigned char *key = (unsigned char *) "any256bitkey_chars_to_complete_0";
-
-	static const unsigned char* plain = (unsigned char *) "Se hoje é o dia das crianças... Ontem eu disse: o dia da criança é o dia da mãe, dos pais, das professoras, mas também é o dia dos animais, sempre que você olha uma criança, há sempre uma figura oculta, que é um cachorro atrás. O que é algo muito importante!"; //"the fox jumped over the lazy dog";
-
-	_test_success(type, key, plain);
-
 	int i;
-	/* A 256 bit key */
-	unsigned char *rkey;
-	unsigned char* rplain;
+	unsigned char rkey[32];
+	unsigned char rplain[1024];
 
 	for (i = 0; i < times; i++) {
 
-		rkey = gen_random(32);
-		rplain = gen_random(1024);
+		memset(rkey, 0, 32* sizeof(unsigned char));
+		memset(rplain, 0, 1024* sizeof(unsigned char));
 
-		_test_success(type, rkey, rplain);
+		gen_random(rkey, 32);
+		gen_random(rplain, 1024);
+
+		_test_success(type, rkey, 32, rplain, 1024);
 	}
 }
 
-static void _test_success_iv(cryptoc_cipher_type type, const unsigned char *key, const unsigned char *iv, const unsigned char *plain) {
+static void _test_success_iv(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char *iv, int ivLength, const unsigned char *plain, int plainLength) {
 
-	cryptoc_data cipheredData = cryptoc_encrypt_iv(type, key, iv, plain, strlen((char*) plain));
+	cryptoc_data cipheredData = cryptoc_encrypt_iv(type, key, keyLength, iv, ivLength, plain, plainLength);
 	if (cipheredData.error) {
 		fail_msg("%s", cipheredData.errorMessage);
 		assert_false(cipheredData.error);
 		return;
 	}
 
-	cryptoc_data decipheredData = cryptoc_decrypt_iv(type, key, iv, cipheredData.data, cipheredData.length);
+	cryptoc_data decipheredData = cryptoc_decrypt_iv(type, key, keyLength, iv, ivLength, cipheredData.data, cipheredData.length);
 	if (decipheredData.error) {
 		fail_msg("%s", decipheredData.errorMessage);
 		assert_false(decipheredData.error);
@@ -104,31 +96,34 @@ static void _test_success_iv(cryptoc_cipher_type type, const unsigned char *key,
 static void _test_success_loop_iv(cryptoc_cipher_type type, int iv_length, int times) {
 
 	int i;
-	/* A 256 bit key */
-	unsigned char *rkey;
-	unsigned char *riv;
-	unsigned char* rplain;
+	unsigned char rkey[32];
+	unsigned char riv[32];
+	unsigned char rplain[1024];
 
 	for (i = 0; i < times; i++) {
 
-		rkey = gen_random(32);
-		riv = gen_random(iv_length);
-		rplain = gen_random(1024);
+		memset(rkey, 0, 32* sizeof(unsigned char));
+		memset(riv, 0, iv_length* sizeof(unsigned char));
+		memset(rplain, 0, 1024* sizeof(unsigned char));
 
-		_test_success_iv(type, rkey, riv, rplain);
+		gen_random(rkey, 32);
+		gen_random(riv, iv_length);
+		gen_random(rplain, 1024);
+
+		_test_success_iv(type, rkey, 32, riv, iv_length, rplain, 1024);
 	}
 }
 
-static void _test_success_iv_aad(cryptoc_cipher_type type, const unsigned char *key, const unsigned char *iv, const unsigned char *plain) {
+static void _test_success_iv_aad(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char *iv, int ivLength, const unsigned char *plain, int plainLength) {
 
-	cryptoc_data cipheredData = cryptoc_encrypt_iv_aad(type, key, iv, NULL, 0, plain, strlen((char*) plain));
+	cryptoc_data cipheredData = cryptoc_encrypt_iv_aad(type, key, keyLength, iv, ivLength, NULL, 0, plain, plainLength);
 	if (cipheredData.error) {
 		fail_msg("%s", cipheredData.errorMessage);
 		assert_false(cipheredData.error);
 		return;
 	}
 
-	cryptoc_data decipheredData = cryptoc_decrypt_iv_aad(type, key, iv, NULL, 0, cipheredData.tag, cipheredData.tagLength, cipheredData.data, cipheredData.length);
+	cryptoc_data decipheredData = cryptoc_decrypt_iv_aad(type, key, keyLength, iv, ivLength, NULL, 0, cipheredData.tag, cipheredData.tagLength, cipheredData.data, cipheredData.length);
 	if (decipheredData.error) {
 		fail_msg("%s", decipheredData.errorMessage);
 		assert_false(decipheredData.error);
@@ -151,18 +146,21 @@ static void _test_success_iv_aad(cryptoc_cipher_type type, const unsigned char *
 static void _test_success_loop_iv_aad(cryptoc_cipher_type type, int iv_length, int times) {
 
 	int i;
-	/* A 256 bit key */
-	unsigned char *rkey;
-	unsigned char *riv;
-	unsigned char* rplain;
+	unsigned char rkey[32];
+	unsigned char riv[32];
+	unsigned char rplain[1024];
 
 	for (i = 0; i < times; i++) {
 
-		rkey = gen_random(32);
-		riv = gen_random(iv_length);
-		rplain = gen_random(1024);
+		memset(rkey, 0, 32* sizeof(unsigned char));
+		memset(riv, 0, iv_length* sizeof(unsigned char));
+		memset(rplain, 0, 1024* sizeof(unsigned char));
 
-		_test_success_iv_aad(type, rkey, riv, rplain);
+		gen_random(rkey, 32);
+		gen_random(riv, iv_length);
+		gen_random(rplain, 1024);
+
+		_test_success_iv_aad(type, rkey, 32, riv, iv_length, rplain, 1024);
 	}
 }
 
@@ -274,12 +272,11 @@ static void simple_test_error(void **state) {
 	long current_time; // real call is required here
 	time(&current_time);
 
-	/* A 256 bit key */
 	unsigned char *key = (unsigned char *) "any256bitkey_chars_to_complete_0";
+	unsigned char* plain = (unsigned char *) "The fox jumped over the lazy dog";
 
-	unsigned char* plain = (unsigned char *) "Se hoje é o dia das crianças... Ontem eu disse: o dia da criança é o dia da mãe, dos pais, das professoras, mas também é o dia dos animais, sempre que você olha uma criança, há sempre uma figura oculta, que é um cachorro atrás. O que é algo muito importante!"; //"the fox jumped over the lazy dog";
+	cryptoc_data decipheredData = cryptoc_decrypt(CRYPTOC_AES_192_CBC, key, strlen((char*) key), plain, strlen((char*) plain));
 
-	cryptoc_data decipheredData = cryptoc_decrypt(CRYPTOC_AES_192_CBC, key, plain, strlen((char*) plain));
 	if (!decipheredData.error) {
 		fail_msg("This plain text could not be decrypted");
 	}
