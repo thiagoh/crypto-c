@@ -42,12 +42,10 @@ newplaintext.second; // length
 
 ```
 ./build.sh
-
-mkdir build
-cd build
-rm -rf ./* 
-cmake --debug-output .. 
-make -j 4
 ``` 
 
+## Valgrind tests
 
+``` 
+valgrind --tool=memcheck --leak-check=full --show-reachable=yes --track-origins=yes ./build/test/test_cryptoc
+``` 

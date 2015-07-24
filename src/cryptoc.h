@@ -21,7 +21,7 @@ typedef struct {
 	int tagLength;
 	int length;
 	bool error;
-	const char* errorMessage;
+	char* errorMessage;
 } cryptoc_data;
 
 typedef enum {

@@ -22,7 +22,7 @@ static void cryptoc_handle_errors(cryptoc_data* data) {
 	const char* reason = ERR_reason_error_string(errorcode);
 	const char* lib_error = ERR_lib_error_string(errorcode);
 
-	char* errormsg = (char*) malloc(sizeof(char*) * (10 + strlen(reason) + strlen(lib_error)));
+	char* errormsg = (char*) malloc(sizeof(char) * (10 + strlen(reason) + strlen(lib_error)));
 	sprintf(errormsg, "error: %d %s. reason: %s", errorcode, reason, lib_error);
 
 	data->errorMessage = errormsg;
@@ -268,16 +268,24 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 
 	cryptoc_data p;
 	p.error = false;
+	p.errorMessage = 0;
+	p.data = 0;
+	p.tag = 0;
+	p.tagLength = 0;
 
 	if (!plaintext) {
 		p.error = true;
-		p.errorMessage = "Plaintext must be defined";
+		char s[60];
+		sprintf(s, "Plaintext must be defined");
+		p.errorMessage = s;
 		return p;
 	}
 
 	if (plaintextLength < 0) {
 		p.error = true;
-		p.errorMessage = "Plaintext length must be positive";
+		char s[60];
+		sprintf(s, "Plaintext length must be positive");
+		p.errorMessage = s;
 		return p;
 	}
 
@@ -332,26 +340,32 @@ cryptoc_data cryptoc_encrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 
 		if (iv == NULL) {
 			p.error = true;
-			p.errorMessage = "Error: The iv cannot be null";
+			char s[60];
+			sprintf(s, "Error: The iv cannot be null");
+			p.errorMessage = s;
+			_finally(ctx);
+			return p;
+		}
+
+		if (strlen((char*) iv) < cipher_iv_length) {
+			p.error = true;
+			char s[60];
+			sprintf(s, "Error: The iv cannot be lower than %d");
+			p.errorMessage = s;
 			_finally(ctx);
 			return p;
 		}
 
 		if (strlen((char*) iv) > cipher_iv_length) {
 			fprintf(stderr, "Warn: The iv cannot be greater than %d so it was truncated\n", cipher_iv_length);
-		}
 
-		if (strlen((char*) iv) < cipher_iv_length) {
-			p.error = true;
-			char s[60];
-			sprintf(s, "Error: The iv cannot be lower than %d", EVP_MAX_IV_LENGTH);
-			p.errorMessage = s;
-			_finally(ctx);
-			return p;
+			strncpy((char*) effective_iv, (const char*) iv, cipher_iv_length);
+			effective_iv[cipher_iv_length] = '\0';
+			iv_length = strlen((char*) effective_iv);
+		} else {
+			strcpy((char*) effective_iv, (const char*) iv);
+			iv_length = strlen((char*) effective_iv);
 		}
-
-		strncpy((char*) effective_iv, (const char*) iv, cipher_iv_length);
-		iv_length = strlen((char*) effective_iv);
 	}
 
 	unsigned long cipher_mode = EVP_CIPHER_mode(cipher);
@@ -487,16 +501,24 @@ cryptoc_data cryptoc_decrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 
 	cryptoc_data p;
 	p.error = false;
+	p.errorMessage = 0;
+	p.data = 0;
+	p.tag = 0;
+	p.tagLength = 0;
 
 	if (!ciphertext) {
 		p.error = true;
-		p.errorMessage = "Cipher text must be defined";
+		char s[60];
+		sprintf(s, "Cipher text must be defined");
+		p.errorMessage = s;
 		return p;
 	}
 
 	if (ciphertextLength < 0) {
 		p.error = true;
-		p.errorMessage = "Cipher text length must be positive";
+		char s[60];
+		sprintf(s, "Cipher text length must be positive");
+		p.errorMessage = s;
 		return p;
 	}
 
@@ -542,13 +564,11 @@ cryptoc_data cryptoc_decrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 
 		if (iv == NULL) {
 			p.error = true;
-			p.errorMessage = "Error: The iv cannot be null";
+			char s[60];
+			sprintf(s, "Error: The iv cannot be null");
+			p.errorMessage = s;
 			_finally(ctx);
 			return p;
-		}
-
-		if (strlen((char*) iv) > cipher_iv_length) {
-			fprintf(stderr, "Warn: The iv cannot be greater than %d so it was truncated", cipher_iv_length);
 		}
 
 		if (strlen((char*) iv) < cipher_iv_length) {
@@ -560,8 +580,16 @@ cryptoc_data cryptoc_decrypt_iv_aad(cryptoc_cipher_type type, const unsigned cha
 			return p;
 		}
 
-		strncpy((char*) effective_iv, (const char*) iv, cipher_iv_length);
-		iv_length = strlen((char*) effective_iv);
+		if (strlen((char*) iv) > cipher_iv_length) {
+			fprintf(stderr, "Warn: The iv cannot be greater than %d so it was truncated\n", cipher_iv_length);
+
+			strncpy((char*) effective_iv, (const char*) iv, cipher_iv_length);
+			effective_iv[cipher_iv_length] = '\0';
+			iv_length = strlen((char*) effective_iv);
+		} else {
+			strcpy((char*) effective_iv, (const char*) iv);
+			iv_length = strlen((char*) effective_iv);
+		}
 	}
 
 	unsigned long cipher_mode = EVP_CIPHER_mode(cipher);

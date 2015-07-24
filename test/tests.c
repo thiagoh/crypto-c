@@ -78,16 +78,27 @@ static void _test_success_iv(cryptoc_cipher_type type, const unsigned char *key,
 	if (cipheredData.error) {
 		fail_msg("%s", cipheredData.errorMessage);
 		assert_false(cipheredData.error);
+		return;
 	}
 
 	cryptoc_data decipheredData = cryptoc_decrypt_iv(type, key, iv, cipheredData.data, cipheredData.length);
 	if (decipheredData.error) {
 		fail_msg("%s", decipheredData.errorMessage);
 		assert_false(decipheredData.error);
+		return;
 	}
 
 	assert_int_equal(strlen((char*) plain), decipheredData.length);
-	assert_int_equal(strncmp((const char*)plain, (const char*)decipheredData.data, strlen((char*)plain)), 0);
+	size_t len = strlen((char*)plain);
+	assert_int_equal(strncmp((const char*)plain, (const char*)decipheredData.data, len), 0);
+
+	free(cipheredData.data);
+	free(cipheredData.errorMessage);
+	free(cipheredData.tag);
+
+	free(decipheredData.data);
+	free(decipheredData.errorMessage);
+	free(decipheredData.tag);
 }
 
 static void _test_success_loop_iv(cryptoc_cipher_type type, int iv_length, int times) {
@@ -114,16 +125,27 @@ static void _test_success_iv_aad(cryptoc_cipher_type type, const unsigned char *
 	if (cipheredData.error) {
 		fail_msg("%s", cipheredData.errorMessage);
 		assert_false(cipheredData.error);
+		return;
 	}
 
 	cryptoc_data decipheredData = cryptoc_decrypt_iv_aad(type, key, iv, NULL, 0, cipheredData.tag, cipheredData.tagLength, cipheredData.data, cipheredData.length);
 	if (decipheredData.error) {
 		fail_msg("%s", decipheredData.errorMessage);
 		assert_false(decipheredData.error);
+		return;
 	}
 
 	assert_int_equal(strlen((char*) plain), decipheredData.length);
-	assert_int_equal(strncmp((const char*)plain, (const char*)decipheredData.data, strlen((char*)plain)), 0);
+	size_t len = strlen((char*)plain);
+	assert_int_equal(strncmp((const char*)plain, (const char*)decipheredData.data, len), 0);
+
+	free(cipheredData.data);
+	free(cipheredData.errorMessage);
+	free(cipheredData.tag);
+
+	free(decipheredData.data);
+	free(decipheredData.errorMessage);
+	free(decipheredData.tag);
 }
 
 static void _test_success_loop_iv_aad(cryptoc_cipher_type type, int iv_length, int times) {
