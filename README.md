@@ -17,6 +17,7 @@ const char* plaintext = "the fox jumped over the lazy dog";
 
 The default cipher mode is CBC and algorithm is 3DES_EDE 
 
+// fix to use shared pointer 
 cryptoc_data ciphertext = cryptoc_encrypt_iv(plaintext, strlen(plaintext), key, key_length, iv, iv_length, &len);
 
 if (ciphertext.error) {
@@ -24,6 +25,7 @@ if (ciphertext.error) {
   printf("%s", ciphertext.errorMessage);
 }
 
+// fix to use shared pointer 
 cryptoc_data newplaintext = cryptoc_decrypt_iv(ciphertext, strlen(ciphertext), key, key_length, iv,  iv_length, &newlen);
 
 if (newplaintext.error) {
