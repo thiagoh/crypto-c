@@ -114,6 +114,56 @@ static void _test_success_loop_iv(cryptoc_cipher_type type, int iv_length, int t
 	}
 }
 
+static void _test_success_loop_base64_encodede(cryptoc_cipher_type type, int iv_length, int times) {
+
+	int i;
+	unsigned char rkey[32];
+	unsigned char riv[32];
+	unsigned char rplain[1024];
+
+	for (i = 0; i < times; i++) {
+
+		memset(rkey, 0, 32* sizeof(unsigned char));
+		memset(riv, 0, iv_length* sizeof(unsigned char));
+		memset(rplain, 0, 1024* sizeof(unsigned char));
+
+		gen_random(rkey, 32);
+		gen_random(riv, iv_length);
+		gen_random(rplain, 1024);
+
+		_test_success_base64_encodede(type, rkey, 32, riv, iv_length, rplain, 1024);
+	}
+}
+
+static void _test_success_base64_encodede(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char *iv, int ivLength, const unsigned char *plain, int plainLength) {
+
+	cryptoc_data cipheredData = cryptoc_encrypt_iv(type, key, keyLength, iv, ivLength, plain, plainLength);
+	if (cipheredData.error) {
+		fail_msg("%s", cipheredData.errorMessage);
+		assert_false(cipheredData.error);
+		return;
+	}
+
+	cryptoc_data decipheredData = cryptoc_decrypt_iv(type, key, keyLength, iv, ivLength, cipheredData.data, cipheredData.length);
+	if (decipheredData.error) {
+		fail_msg("%s", decipheredData.errorMessage);
+		assert_false(decipheredData.error);
+		return;
+	}
+
+	assert_int_equal(strlen((char*) plain), decipheredData.length);
+	size_t len = strlen((char*)plain);
+	assert_int_equal(strncmp((const char*)plain, (const char*)decipheredData.data, len), 0);
+
+	free(cipheredData.data);
+	free(cipheredData.errorMessage);
+	free(cipheredData.tag);
+
+	free(decipheredData.data);
+	free(decipheredData.errorMessage);
+	free(decipheredData.tag);
+}
+
 static void _test_success_iv_aad(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char *iv, int ivLength, const unsigned char *plain, int plainLength) {
 
 	cryptoc_data cipheredData = cryptoc_encrypt_iv_aad(type, key, keyLength, iv, ivLength, NULL, 0, plain, plainLength);
@@ -266,6 +316,9 @@ static void test_success_AES_256_ECB(void **state) {
 	_test_success_loop(CRYPTOC_AES_256_ECB, LOOP_TESTING_TIMES);
 }
 
+static void test_success_base64_encodede(void **state) {
+	_test_success_loop_base64_encodede(CRYPTOC_AES_256_OFB, 16, LOOP_TESTING_TIMES);
+}
 /* A test case that does something with errors. */
 static void simple_test_error(void **state) {
 
@@ -327,6 +380,8 @@ int main(void) {
 		cmocka_unit_test(test_success_AES_256_ECB),
 		cmocka_unit_test(test_success_AES_256_GCM),
 		cmocka_unit_test(test_success_AES_256_OFB),
+
+		cmocka_unit_test(test_success_base64_encodede),
         cmocka_unit_test(simple_test_error),
     };
 

@@ -9,6 +9,7 @@
 #define SRC_CRYPTOC_H_
 
 #include <openssl/conf.h>
+#include <openssl/bio.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <stdio.h>
@@ -115,6 +116,8 @@ typedef enum {
 cryptoc_data cryptoc_encrypt(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char* plaintext, int plaintextLength);
 
 cryptoc_data cryptoc_decrypt(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char* ciphertext, int ciphertextLength);
+
+cryptoc_data cryptoc_decrypt_base64(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char* ciphertext, int ciphertextLength);
 
 cryptoc_data cryptoc_encrypt_iv(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char* iv, int ivLength, const unsigned char* plaintext, int plaintextLength);
 

@@ -253,6 +253,27 @@ cryptoc_data cryptoc_decrypt(cryptoc_cipher_type type, const unsigned char *key,
 	return cryptoc_decrypt_iv(type, key, keyLength, NULL, 0, ciphertext, ciphertextLength);
 }
 
+cryptoc_data cryptoc_decrypt_base64(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char* ciphertext, int ciphertextLength) {
+
+	unsigned char* data = (unsigned char*) malloc(sizeof(unsigned char) * keyLength);
+	int inlen = 0;
+	int dataLen = 0;
+
+	BIO* b64 = BIO_new(BIO_f_base64());
+	BIO* out = BIO_new(BIO_s_mem());
+	BIO_push(b64, out);
+
+	while((inlen = BIO_write(b64, key, keyLength)) > 0) {
+		dataLen += inlen;
+		BIO_read(out, data, 512);
+	}
+
+	BIO_flush(b64);
+	BIO_free_all(b64);
+
+	return cryptoc_decrypt_iv(type, data, dataLen, NULL, 0, ciphertext, ciphertextLength);
+}
+
 cryptoc_data cryptoc_encrypt_iv(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char* iv, int ivLength, const unsigned char* plaintext, int plaintextLength) {
 
 	return cryptoc_encrypt_iv_aad(type, key, keyLength, iv, ivLength, NULL, 0, plaintext, plaintextLength);
