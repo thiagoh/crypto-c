@@ -93,39 +93,19 @@ static void _test_success_iv(cryptoc_cipher_type type, const unsigned char *key,
 	free(decipheredData.tag);
 }
 
-static void _test_success_iv_base64(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char *iv, int ivLength, const unsigned char *plain, int plainLength) {
+static void _test_success_base64(const unsigned char *plain, int length) {
 
-	//int cryptoc_base64_encode(const unsigned char *plain, int plainLength, unsigned char* data);
-	//int cryptoc_base64_decode(const unsigned char *encoded, int encodedLength, unsigned char* data);
+	unsigned char* dataEncoded = (unsigned char*) malloc(sizeof(unsigned char) * length);
+	int dataEncodedLen = cryptoc_base64_encode(plain, length, dataEncoded);
 
-	cryptoc_data cipheredData = cryptoc_encrypt_iv(type, key, keyLength, iv, ivLength, plain, plainLength);
-	if (cipheredData.error) {
-		fail_msg("%s", cipheredData.errorMessage);
-		assert_false(cipheredData.error);
-		return;
-	}
+	unsigned char* dataDecoded = (unsigned char*) malloc(sizeof(unsigned char) * dataEncodedLen);
+	int dataDecodedLen = cryptoc_base64_decode(dataEncoded, dataEncodedLen, dataDecoded);
 
-	unsigned char* data = (unsigned char*) malloc(sizeof(unsigned char) * cipheredData.length);
-	int dataLen = cryptoc_base64_encode(cipheredData.data, cipheredData.length, data);
+	assert_int_equal(length, dataDecoded);
+	assert_int_equal(strncmp((const char*)plain, (const char*)dataDecoded, length), 0);
 
-	cryptoc_data decipheredData = cryptoc_decrypt_iv(type, key, keyLength, iv, ivLength, cipheredData.data, cipheredData.length);
-	if (decipheredData.error) {
-		fail_msg("%s", decipheredData.errorMessage);
-		assert_false(decipheredData.error);
-		return;
-	}
-
-	assert_int_equal(strlen((char*) plain), decipheredData.length);
-	size_t len = strlen((char*)plain);
-	assert_int_equal(strncmp((const char*)plain, (const char*)decipheredData.data, len), 0);
-
-	free(cipheredData.data);
-	free(cipheredData.errorMessage);
-	free(cipheredData.tag);
-
-	free(decipheredData.data);
-	free(decipheredData.errorMessage);
-	free(decipheredData.tag);
+	free(dataEncoded);
+	free(dataDecoded);
 }
 
 static void _test_success_loop_iv(cryptoc_cipher_type type, int iv_length, int times) {
@@ -153,20 +133,14 @@ static void _test_success_loop_base64_encodede(cryptoc_cipher_type type, int iv_
 
 	int i;
 	unsigned char rkey[32];
-	unsigned char riv[32];
-	unsigned char rplain[1024];
 
 	for (i = 0; i < times; i++) {
 
 		memset(rkey, 0, 32* sizeof(unsigned char));
-		memset(riv, 0, iv_length* sizeof(unsigned char));
-		memset(rplain, 0, 1024* sizeof(unsigned char));
 
 		gen_random(rkey, 32);
-		gen_random(riv, iv_length);
-		gen_random(rplain, 1024);
 
-		_test_success_iv_base64(type, rkey, 32, riv, iv_length, rplain, 1024);
+		_test_success_base64(rkey, 32);
 	}
 }
 
