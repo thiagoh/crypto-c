@@ -112,12 +112,13 @@ typedef enum {
 
 } cryptoc_cipher_type;
 
+int cryptoc_base64_encode(const unsigned char *plain, int plainLength, unsigned char* data);
+
+int cryptoc_base64_decode(const unsigned char *encoded, int encodedLength, unsigned char* data);
 
 cryptoc_data cryptoc_encrypt(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char* plaintext, int plaintextLength);
 
 cryptoc_data cryptoc_decrypt(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char* ciphertext, int ciphertextLength);
-
-cryptoc_data cryptoc_decrypt_base64(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char* ciphertext, int ciphertextLength);
 
 cryptoc_data cryptoc_encrypt_iv(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char* iv, int ivLength, const unsigned char* plaintext, int plaintextLength);
 
