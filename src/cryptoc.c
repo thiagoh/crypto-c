@@ -286,7 +286,7 @@ int cryptoc_base64_decode(const unsigned char *encoded, int encodedLength, unsig
 	// http://stackoverflow.com/questions/12109960/openssl-base64-decoding-bio-read-returns-0?rq=1
 	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
 
-	BIO* out = BIO_new_mem_buf(encoded, encodedLength);
+	BIO* out = BIO_new_mem_buf((void*) encoded, encodedLength);
 	out = BIO_push(b64, out);
 
 	int dataLen = BIO_read(out, data, encodedLength);
