@@ -12,6 +12,7 @@
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
+#include <openssl/buffer.h>
 #include <stdio.h>
 
 typedef enum { false = 0, true = 1} bool;

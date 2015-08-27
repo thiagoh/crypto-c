@@ -255,19 +255,24 @@ cryptoc_data cryptoc_decrypt(cryptoc_cipher_type type, const unsigned char *key,
 
 int cryptoc_base64_encode(const unsigned char *plain, int plainLength, unsigned char* data) {
 
-	int inlen = 0;
-	int dataLen = 0;
+	// http://www.ioncannon.net/programming/34/howto-base64-encode-with-cc-and-openssl/
 
+	BUF_MEM *bptr;
 	BIO* b64 = BIO_new(BIO_f_base64());
 	BIO* out = BIO_new(BIO_s_mem());
-	BIO_push(b64, out);
 
-	while((inlen = BIO_write(b64, data, 512)) > 0 && plainLength > 0) {
-		dataLen += inlen;
-		plainLength -= inlen;
-	}
+	BIO_push(b64, out);
+	BIO_write(b64, plain, plainLength);
 
 	BIO_flush(b64);
+
+	BIO_get_mem_ptr(b64, &bptr);
+
+	int dataLen = bptr->length;
+
+	memcpy(data, bptr->data, bptr->length – 1);
+	data[bptr->length – 1] = 0;
+
 	BIO_free_all(b64);
 
 	return dataLen;
@@ -275,21 +280,15 @@ int cryptoc_base64_encode(const unsigned char *plain, int plainLength, unsigned 
 
 int cryptoc_base64_decode(const unsigned char *encoded, int encodedLength, unsigned char* data) {
 
-	int inlen = 0;
-	int dataLen = 0;
+	// http://www.ioncannon.net/programming/122/howto-base64-decode-with-cc-and-openssl/
 
 	BIO* b64 = BIO_new(BIO_f_base64());
-	BIO* out = BIO_new(BIO_s_mem());
+	BIO* out = BIO_new_mem_buf(encoded, encodedLength);
 	BIO_push(b64, out);
 
-	while((inlen = BIO_write(b64, encoded, 512)) > 0 && encodedLength > 0) {
-		dataLen += inlen;
-		encodedLength -= inlen;
-		BIO_read(out, data, inlen);
-	}
+	int dataLen = BIO_read(out, data, encodedLength);
 
-	BIO_flush(b64);
-	BIO_free_all(b64);
+	BIO_free_all(out);
 
 	return dataLen;
 }

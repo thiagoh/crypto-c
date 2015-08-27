@@ -101,7 +101,7 @@ static void _test_success_base64(const unsigned char *plain, int length) {
 	unsigned char* dataDecoded = (unsigned char*) malloc(sizeof(unsigned char) * dataEncodedLen);
 	int dataDecodedLen = cryptoc_base64_decode(dataEncoded, dataEncodedLen, dataDecoded);
 
-	assert_int_equal(length, dataDecoded);
+	assert_int_equal(length, dataDecodedLen);
 	assert_int_equal(strncmp((const char*)plain, (const char*)dataDecoded, length), 0);
 
 	free(dataEncoded);
@@ -129,7 +129,7 @@ static void _test_success_loop_iv(cryptoc_cipher_type type, int iv_length, int t
 	}
 }
 
-static void _test_success_loop_base64_encodede(cryptoc_cipher_type type, int iv_length, int times) {
+static void _test_success_loop_base64_encoded(int times) {
 
 	int i;
 	unsigned char rkey[32];
@@ -296,8 +296,8 @@ static void test_success_AES_256_ECB(void **state) {
 	_test_success_loop(CRYPTOC_AES_256_ECB, LOOP_TESTING_TIMES);
 }
 
-static void test_success_base64_encodede(void **state) {
-	_test_success_loop_base64_encodede(CRYPTOC_AES_256_OFB, 16, LOOP_TESTING_TIMES);
+static void test_success_base64_encoded(void **state) {
+	_test_success_loop_base64_encoded(LOOP_TESTING_TIMES);
 }
 /* A test case that does something with errors. */
 static void simple_test_error(void **state) {
@@ -326,6 +326,7 @@ int main(void) {
 
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(null_test_success),
+		cmocka_unit_test(test_success_base64_encoded),
 
 		cmocka_unit_test(test_success_DESX_CBC),
 		cmocka_unit_test(test_success_DES_CBC),
@@ -360,8 +361,6 @@ int main(void) {
 		cmocka_unit_test(test_success_AES_256_ECB),
 		cmocka_unit_test(test_success_AES_256_GCM),
 		cmocka_unit_test(test_success_AES_256_OFB),
-
-		cmocka_unit_test(test_success_base64_encodede),
         cmocka_unit_test(simple_test_error),
     };
 
