@@ -95,10 +95,10 @@ static void _test_success_iv(cryptoc_cipher_type type, const unsigned char *key,
 
 static void _test_success_base64(const unsigned char *plain, int length) {
 
-	unsigned char* dataEncoded = (unsigned char*) malloc(sizeof(unsigned char) * length);
+	unsigned char* dataEncoded = (unsigned char*) malloc(sizeof(unsigned char) * (length + 32));
 	int dataEncodedLen = cryptoc_base64_encode(plain, length, dataEncoded);
 
-	unsigned char* dataDecoded = (unsigned char*) malloc(sizeof(unsigned char) * dataEncodedLen);
+	unsigned char* dataDecoded = (unsigned char*) malloc(sizeof(unsigned char) * (dataEncodedLen + 32));
 	int dataDecodedLen = cryptoc_base64_decode(dataEncoded, dataEncodedLen, dataDecoded);
 
 	assert_int_equal(length, dataDecodedLen);
