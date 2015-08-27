@@ -270,10 +270,10 @@ int cryptoc_base64_encode(const unsigned char *plain, int plainLength, unsigned 
 
 	int dataLen = bptr->length;
 
-	memcpy(data, bptr->data, bptr->length – 1);
-	data[bptr->length – 1] = 0;
+	memcpy(data, bptr->data, bptr->length);
+	data[bptr->length] = 0;
 
-	BIO_free_all(b64);
+	BIO_free_all(out);
 
 	return dataLen;
 }
@@ -282,9 +282,15 @@ int cryptoc_base64_decode(const unsigned char *encoded, int encodedLength, unsig
 
 	// http://www.ioncannon.net/programming/122/howto-base64-decode-with-cc-and-openssl/
 
+	memset(data, 0, encodedLength);
+
 	BIO* b64 = BIO_new(BIO_f_base64());
-	BIO* out = BIO_new_mem_buf(encoded, encodedLength);
-	BIO_push(b64, out);
+
+	// http://stackoverflow.com/questions/12109960/openssl-base64-decoding-bio-read-returns-0?rq=1
+	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+
+	BIO* out = BIO_new_mem_buf((void*) encoded, encodedLength);
+	out = BIO_push(b64, out);
 
 	int dataLen = BIO_read(out, data, encodedLength);
 
