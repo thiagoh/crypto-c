@@ -98,14 +98,15 @@ static void _test_success_iv_base64(cryptoc_cipher_type type, const unsigned cha
 	//int cryptoc_base64_encode(const unsigned char *plain, int plainLength, unsigned char* data);
 	//int cryptoc_base64_decode(const unsigned char *encoded, int encodedLength, unsigned char* data);
 
-	cryptoc_base64_encode(key, key)
-
 	cryptoc_data cipheredData = cryptoc_encrypt_iv(type, key, keyLength, iv, ivLength, plain, plainLength);
 	if (cipheredData.error) {
 		fail_msg("%s", cipheredData.errorMessage);
 		assert_false(cipheredData.error);
 		return;
 	}
+
+	unsigned char* data = (unsigned char*) malloc(sizeof(unsigned char) * cipheredData.length);
+	int dataLen = cryptoc_base64_encode(cipheredData.data, cipheredData.length, data);
 
 	cryptoc_data decipheredData = cryptoc_decrypt_iv(type, key, keyLength, iv, ivLength, cipheredData.data, cipheredData.length);
 	if (decipheredData.error) {
