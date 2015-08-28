@@ -9,7 +9,7 @@
 
 /* Use the unit test allocators */
 #define UNIT_TESTING 1
-const int LOOP_TESTING_TIMES = 200;
+const int LOOP_TESTING_TIMES = 50;
 
 static void gen_random(unsigned char *s, const int len) {
 
@@ -301,6 +301,28 @@ static void test_success_base64_encoded(void **state) {
 	_test_success_loop_base64_encoded(LOOP_TESTING_TIMES);
 }
 /* A test case that does something with errors. */
+static void simple_test(void **state) {
+
+	long current_time; // real call is required here
+	time(&current_time);
+
+	char* iv = (char *) "30313233343536373839313233343536";
+	int ivlength = strlen((const char*) iv);
+	unsigned char* key= (unsigned char *) "54686520666F78206A756D706564206F7665722074686520";
+	unsigned char* dataEncoded = (unsigned char *) "xFxmCpSLikzwHdvs5N06AQ==";
+
+	unsigned char* dataDecoded = (unsigned char*) malloc(sizeof(unsigned char) * strlen((const char*)dataEncoded));
+	int dataDecodedLen = cryptoc_base64_decode(dataEncoded, strlen((const char*)dataEncoded), dataDecoded);
+
+	cryptoc_data decipheredData = cryptoc_decrypt_iv(CRYPTOC_AES_192_CBC, key, strlen((char*) key), (unsigned char*) iv, ivlength, dataDecoded, dataDecodedLen);
+
+	if (decipheredData.error) {
+		fail_msg("This data could not be decrypted");
+	}
+
+	assert_true(decipheredData.error);
+}
+/* A test case that does something with errors. */
 static void simple_test_error(void **state) {
 
 	long current_time; // real call is required here
@@ -327,6 +349,7 @@ int main(void) {
 
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(null_test_success),
+        cmocka_unit_test(simple_test),
 		cmocka_unit_test(test_success_base64_encoded),
 
 		cmocka_unit_test(test_success_DESX_CBC),
