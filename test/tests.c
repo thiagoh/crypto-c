@@ -306,15 +306,17 @@ static void simple_test(void **state) {
 	long current_time; // real call is required here
 	time(&current_time);
 
-	char* iv = (char *) "30313233343536373839313233343536";
-	int ivlength = strlen((const char*) iv);
-	unsigned char* key= (unsigned char *) "54686520666F78206A756D706564206F7665722074686520";
-	unsigned char* dataEncoded = (unsigned char *) "xFxmCpSLikzwHdvs5N06AQ==";
+	unsigned char* ivEncoded = (unsigned char *) "Z2Pv3p2lcHs00G0OiKDxOA==";
+	unsigned char* key= (unsigned char *) "The fox jumped over the lazy dog";
+	unsigned char* dataEncoded = (unsigned char *) "gvC64EMh8iNZn7+J1tVi5g==";
 
 	unsigned char* dataDecoded = (unsigned char*) malloc(sizeof(unsigned char) * strlen((const char*)dataEncoded));
 	int dataDecodedLen = cryptoc_base64_decode(dataEncoded, strlen((const char*)dataEncoded), dataDecoded);
 
-	cryptoc_data decipheredData = cryptoc_decrypt_iv(CRYPTOC_AES_192_CBC, key, strlen((char*) key), (unsigned char*) iv, ivlength, dataDecoded, dataDecodedLen);
+	unsigned char* ivDecoded = (unsigned char*) malloc(sizeof(unsigned char) * strlen((const char*)ivEncoded));
+	int ivDecodedLen = cryptoc_base64_decode(ivEncoded, strlen((const char*)ivEncoded), ivDecoded);
+
+	cryptoc_data decipheredData = cryptoc_decrypt(CRYPTOC_DES_EDE3_CBC, key, strlen((char*) key), dataDecoded, dataDecodedLen);
 
 	if (decipheredData.error) {
 		fail_msg("This data could not be decrypted");
