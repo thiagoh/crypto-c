@@ -316,34 +316,13 @@ static void simple_test(void **state) {
 	unsigned char* ivDecoded = (unsigned char*) malloc(sizeof(unsigned char) * strlen((const char*)ivEncoded));
 	int ivDecodedLen = cryptoc_base64_decode(ivEncoded, strlen((const char*)ivEncoded), ivDecoded);
 
-	cryptoc_data decipheredData1 = cryptoc_decrypt_iv(CRYPTOC_DES_CBC, key, strlen((char*) key), ivDecoded, ivDecodedLen, dataDecoded, dataDecodedLen);
-	cryptoc_data decipheredData2 = cryptoc_decrypt_iv(CRYPTOC_DES_EDE, key, strlen((char*) key), ivDecoded, ivDecodedLen, dataDecoded, dataDecodedLen);
-	cryptoc_data decipheredData3 = cryptoc_decrypt_iv(CRYPTOC_DES_EDE_CBC, key, strlen((char*) key), ivDecoded, ivDecodedLen, dataDecoded, dataDecodedLen);
-	cryptoc_data decipheredData4 = cryptoc_decrypt_iv(CRYPTOC_DES_EDE3_CBC, key, strlen((char*) key), ivDecoded, ivDecodedLen, dataDecoded, dataDecodedLen);
+	cryptoc_data decipheredData = cryptoc_decrypt_iv(CRYPTOC_DES_EDE3_CBC, key, strlen((char*) key), ivDecoded, ivDecodedLen, dataDecoded, dataDecodedLen);
 
-	if (decipheredData1.error) {
-		//fail_msg("This data could not be decrypted");
+	if (decipheredData.error) {
+		fail_msg("This data could not be decrypted");
 	}
 
-	if (decipheredData1.error) {
-		printf("Error for 1 %s \n", decipheredData1.errorMessage);
-	}
-
-	if (decipheredData2.error) {
-		printf("Error for 2 %s \n", decipheredData2.errorMessage);
-	}
-
-	if (decipheredData3.error) {
-		printf("Error for 3 %s \n", decipheredData3.errorMessage);
-	}
-
-	if (decipheredData4.error) {
-		printf("Error for 4 %s \n", decipheredData4.errorMessage);
-	}
-
-	printf("End of test \n");
-
-	//assert_true(decipheredData.error);
+	assert_false(decipheredData.error);
 }
 /* A test case that does something with errors. */
 static void simple_test_error(void **state) {
