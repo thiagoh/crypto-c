@@ -88,7 +88,10 @@ static void _test_success_iv(cryptoc_cipher_type type, const unsigned char *key,
 
 static void _test_success_base64(const unsigned char *plain, int length) {
 
-	// http://stackoverflow.com/questions/13378815/base64-length-calculation
+	/*
+	 * This formula (4 * length/3) was taken from
+	 * http://stackoverflow.com/questions/13378815/base64-length-calculation
+	 */
 	unsigned char* dataEncoded = (unsigned char*) malloc(sizeof(unsigned char) * (4 * length/3));
 	int dataEncodedLen = cryptoc_base64_encode(plain, length, dataEncoded);
 
