@@ -303,7 +303,7 @@ static void test_success_base64_encoded(void **state) {
 /* A test case that does something with errors. */
 static void simple_test(void **state) {
 
-	long current_time; // real call is required here
+	long current_time;
 	time(&current_time);
 
 	/*
@@ -332,7 +332,7 @@ static void simple_test(void **state) {
 /* A test case that does something with errors. */
 static void simple_test_error(void **state) {
 
-	long current_time; // real call is required here
+	long current_time;
 	time(&current_time);
 
 	unsigned char *key = (unsigned char *) "any256bitkey_chars_to_complete_0";
@@ -349,7 +349,7 @@ static void simple_test_error(void **state) {
 
 int main(void) {
 
-	long current_time; // real call is required here
+	long current_time;
 	time(&current_time);
 
 	printf("Test initialization... %ld", current_time);
