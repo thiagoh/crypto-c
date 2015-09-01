@@ -7,7 +7,6 @@
 #include <cmocka.h>
 #include <cryptoc.h>
 
-/* Use the unit test allocators */
 #define UNIT_TESTING 1
 const int LOOP_TESTING_TIMES = 50;
 
@@ -20,12 +19,6 @@ static void gen_random(unsigned char *s, const int len) {
     }
 
     s[len] = '\0';
-}
-
-/* A test case that does nothing and succeeds. */
-static void null_test_success(void **state) {
-
-    (void) state; /* unused */
 }
 
 static void _test_success(cryptoc_cipher_type type, const unsigned char *key, int keyLength, const unsigned char *plain, int plainLength) {
@@ -355,7 +348,6 @@ int main(void) {
 	printf("Test initialization... %ld", current_time);
 
     const struct CMUnitTest tests[] = {
-        cmocka_unit_test(null_test_success),
         cmocka_unit_test(simple_test),
 		cmocka_unit_test(test_success_base64_encoded),
 
