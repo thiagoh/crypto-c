@@ -1,6 +1,7 @@
 # Crypto C library 
 
 [![Build Status](https://travis-ci.org/thiagoh/crypto-c.svg)](https://travis-ci.org/thiagoh/crypto-c)
+[![view on github](https://img.shields.io/node/v/crypto-c.svg)](https://github.com/thiagoh/crypto-c)
 
 This library is intented to encrypt and decrypt data
 
